@@ -103,6 +103,32 @@
         "reasoning": 33912,
         "cache_read": 3469056
       }
+    },
+    "5.1": {
+      "status": "landed",
+      "outcome": "done",
+      "date": "2026-10-26T19:43:20+01:00",
+      "agent": "opencode deepseek/deepseek-flash high",
+      "base": "74f324bcf900e4fbc6ccccefa59bf48e265fc6af",
+      "commits": [
+        "4aaeea4eabedaeef4a1baa032c9f4ef67c79fc1a Implement and prove counted row-local find",
+        "5bad76e2ac820c4a75f80517527bf0bb31172c86 Record find movement experiment evidence"
+      ],
+      "attempts": 1,
+      "handover": "# Handover 5.1\n\n## What landed\n\n- `4aaeea4` activates `spec/navigation/find.bend` in `LAWS.bend`, adds\n  `src/core/navigation_find.bend`, proves `zero`, `exact` and `bounded`, records\n  the documented contract revision, and updates the `find.bend` manifest hash\n  without changing the declaration count.\n- `5bad76e` adds the unit's row to `docs/experiments/navigation-laws.md`.\n\n## Landmark drift\n\nNone. The find module, `LAWS.bend`, `PROOF.bend` and the manifest are where the\nplan expects them.\n\n## Deviations from the work order\n\n- Contract revision under authority section 4: the find interval is now the\n  row-local lower bound `within(i,q) = i \u003e= q`, `limit` is 0 for both\n  directions, and `selected` uses the same high-end suffix count for both.\n  A forward nth match from the low end is the `total - n + 1`-th match from the\n  high end, so forward `rank` is `total - n + 1`; backward rank is still `n`.\n  The old forward prefix count was `n` exactly when this suffix count was\n  `total - n + 1`, and backward is unchanged. Totals, hit condition and\n  insufficient-match fallback are preserved. Old/new formulations and the\n  preserves-behavior argument are in `docs/experiments/navigation-laws.md`.\n- The implementation uses one high-to-low `scan` for both directions and a\n  `pick` fallback. It searches only when `count \u003c= total`; otherwise it returns\n  the original position, so a partial find cannot escape.\n- The rank proof is `scan_complete`: it returns a `ScanComplete` dependent\n  witness (found position, scan equality, hit, suffix count, row bound and head\n  match). Helpers include `hits_zero_below`, `hits_step_*`,\n  `sub_plus_one_le_total`, `rank_positive`, `rank_le_total`,\n  `gt_of_not_le`, and the `complete_*` reconstruction helpers.\n- `find_contents_norm` is the only bridge needed between the law's\n  `Model.contents` and the implementation's `norm(800n,_)`.\n\n## What the next session must know\n\n- Active order in `LAWS.bend` is scene, model, axis, words, lines, find. Add the\n  input import below find and leave earlier imports active.\n- `NavigationFindImpl.move` is the filled `find.move`; `move_impl` delegates to\n  `move_positive` after computing `Nat.is_le(count,total)`.\n- `scan` is structurally recursive on remaining fuel; `scan_complete` mirrors\n  that recursion. Do not add a fallback scan path: exact uses the guard, not a\n  partial scan, when the rank is absent.\n- `sub_plus_one_le_total` is stated for `1 \u003c= count \u003c= total`; `rank_le_total`\n  and `rank_positive` are the reusable forward rank bounds.\n- No general `row(index(r,c))`/`column(index(r,c))` proof was needed; the scan\n  compares absolute indices only through `index_le_mono`/`index_lt_mono` and\n  the row bound stored in `ScanComplete`.\n- `just contract` reports 63 declarations matching the manifest;\n  `just contract-complete` still waits for the final `ALL.bend` import.\n\n## Open problems\n\nNone for this unit. Input parsing, pending find targets, browser integration and\nthe full `ALL.bend` completion remain later units; the browser is unchanged.",
+      "session_id": "ses_e8693e803ffekqrpOV0426PCnd",
+      "cost_usd": 0.2901435900000001,
+      "harness": "opencode",
+      "elapsed_s": 1712,
+      "session_s": 1706,
+      "verify_s": 6,
+      "test_s": 1,
+      "tokens": {
+        "input": 148869,
+        "output": 58448,
+        "reasoning": 184989,
+        "cache_read": 40583680
+      }
     }
   }
 }
