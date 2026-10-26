@@ -25,6 +25,7 @@ h1 { margin: 20px 0 12px; font-size: clamp(24px, 4vw, 38px); font-weight: 500; l
 .statusline { border-top: 1px solid #2b382d; color: #84937e; }
 .statusline span:first-child { color: #b9cd93; }
 canvas { display: block; width: 100%; height: auto; aspect-ratio: 5 / 3; }
+canvas:focus-visible { outline: 2px solid #d8f28a; outline-offset: -2px; }
 footer { display: flex; justify-content: space-between; gap: 16px; margin-top: 18px; color: #73816d; font-size: 10px; line-height: 1.6; }
 
 @media (max-width: 540px) {
