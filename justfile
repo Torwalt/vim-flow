@@ -66,5 +66,7 @@ doctor:
     just --version
     codex --version
     claude --version
+    opencode --version
+    tmux -V
     ploopy --version
     benchpress --version

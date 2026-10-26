@@ -1,7 +1,8 @@
 plans = "docs/plans"
-setup = "nix develop --command just setup"
-verify = "nix develop --command just verify"
-test = "nix develop --command just test"
+launch = "tmux"
+setup = 'if [ ! -e .env ]; then ln -s "$PLOOPY_MAIN/.env" .env; fi && direnv allow . && direnv exec . just setup'
+verify = "direnv exec . just verify"
+test = "direnv exec . just test"
 
 [run]
 push = false

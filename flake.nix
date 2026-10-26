@@ -101,6 +101,8 @@
               pkgs.typescript
               pkgs.clang
               pkgs.just
+              pkgs.direnv
+              pkgs.tmux
               pkgs.git
               pkgs.ripgrep
               pkgs.jq
@@ -108,6 +110,7 @@
               claude-code-nix.packages.${system}.claude-code
               codex-cli-nix.packages.${system}.default
               ploopy.packages.${system}.ploopy
+              ploopy.packages.${system}.opencode
               benchpress.packages.${system}.benchpress
             ]
             ++ pkgs.lib.optional pkgs.stdenv.hostPlatform.isLinux pkgs.chromium;

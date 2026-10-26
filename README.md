@@ -15,11 +15,20 @@ just dev
 Open <http://localhost:3000>. `just` lists the available commands.
 
 The shell includes Bend 2.0.39, Lean 4.34.0, Bun, TypeScript, Clang, just, Codex, Claude Code,
-Ploopy and Benchpress. Linux also includes Chromium for browser checks. The
+OpenCode, tmux, direnv, Ploopy and Benchpress. OpenCode uses Ploopy's pinned package.
+Linux also includes Chromium for browser checks. The
 flake and JS lockfiles pin dependencies. Existing agent authentication is used;
 this project does not create credentials or start agent sessions.
 
 Optional direnv users can run `direnv allow` to use `.envrc`.
+
+Ploopy starts plans in new windows of the current tmux session. Run it from
+inside tmux; it creates and prepares the plan's worktree automatically.
+Worktree setup links the main checkout's ignored `.env`, runs `direnv allow`,
+and installs dependencies with `direnv exec . just setup`. Ploopy checks also
+run through direnv to load the flake and local API credentials.
+Its repository skills live under `.agents/skills/`; refresh them with
+`ploopy skills` after updating Ploopy.
 
 ## Verify
 
