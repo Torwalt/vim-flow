@@ -92,6 +92,7 @@ and cost; no aggregate measurement is asserted here.
 
 | Unit | Commit | Harness/model | Attempts | Checks | Proof issues, representation choices, interventions |
 | --- | --- | --- | --- | --- | --- |
+| 1.1 | `3f56459` | OpenCode / `deepseek/deepseek-flash`, high effort | 1 in the restarted run | `just proof`, `just verify`, `direnv exec . just test` green; contract integrity still 63 declarations, manifest unchanged | Chose `Field = String` and `State = View`. `field` is identity, `at` is an inside-clamped `text_at`, `contents` is an 800-cell sanitized padding built from `text_at`, `view`/`pack` are identity, and `initial` is the prescribed seed. Abstract `Data` laws fill as argument-less defs (`def Model.Field(): String`); typed API laws fill as untyped-name defs. The affine `ok` premise in `contents_at` had to be forwarded once to a proof helper with a reusable `+ok` premise so the same evidence could both rewrite the clamped lookup and supply the padding bound. Added proof-only helper laws for padding length, printability and prefix agreement; no contract revision or manifest change. |
 
 ## Restart revision — 2026-10-26
 
