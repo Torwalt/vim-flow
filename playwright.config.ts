@@ -11,20 +11,23 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
-    { name: "development", use: { baseURL: "http://localhost:3000" } },
-    { name: "production", use: { baseURL: "http://localhost:4173" } },
+    { name: "development" },
+    { name: "production" },
   ],
   webServer: [
     {
-      command: "bun run dev",
-      url: "http://localhost:3000",
-      reuseExistingServer: false,
+      command: "bun --hot --port 0 index.html",
+      wait: {
+        stdout: /(?<vim_flow_development_url>http:\/\/localhost:\d+)\//,
+      },
       timeout: 30_000,
     },
     {
       command: "bun run preview",
-      url: "http://localhost:4173",
-      reuseExistingServer: false,
+      env: { PORT: "0" },
+      wait: {
+        stdout: /Production preview: (?<vim_flow_production_url>http:\/\/localhost:\d+)\//,
+      },
       timeout: 30_000,
     },
   ],

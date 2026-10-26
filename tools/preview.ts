@@ -7,7 +7,7 @@ if (!(await Bun.file(resolve(root, "index.html")).exists())) {
 
 const server = Bun.serve({
   hostname: "localhost",
-  port: 4173,
+  port: Number(process.env.PORT ?? 4173),
   async fetch(request) {
     const pathname = decodeURIComponent(new URL(request.url).pathname);
     const path = resolve(root, `.${pathname === "/" ? "/index.html" : pathname}`);

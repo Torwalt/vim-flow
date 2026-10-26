@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./test";
 
 test("loads the Bend-backed canvas without browser errors", async ({ page }, testInfo) => {
   const errors: string[] = [];

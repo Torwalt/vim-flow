@@ -35,6 +35,10 @@ Browser checks use the flake's Chromium on Linux. On macOS, run
 during dependency installation.
 
 Both the dev server and the static production bundle are checked in Chromium.
+Browser checks start their own servers on OS-assigned ports, so verification
+can run in multiple worktrees while local development and preview servers run.
+Browser tests import `test` and `expect` from `tests/browser/test.ts` to use
+the server URL assigned to their project.
 Screenshots land under `test-results/`. `just preview` serves the production
 bundle at <http://localhost:4173>.
 
