@@ -27,7 +27,10 @@ independent Git history, the retained non-language Nix pins, ignored shared
 `.env`, TypeScript-only baseline, 50 mapped finite obligation checks and the
 migrated seven-unit plan. Baseline verification, both browser projects, Ploopy
 lint and Nix checks passed. No implementation run has started. The Bend result
-is being landed separately; the reviewed snapshot remains recorded by hash.
+landed on `main` at `6c27ce9` after Ploopy's verification and test checks; the
+reviewed snapshot remains recorded by hash. Both GitHub repos are private,
+owned by Torwalt with account type User; Torwalt was the only collaborator/admin
+returned by GitHub after creation. No organization or other collaborator was added.
 
 **Setup and comparison protocol:**
 
