@@ -3,6 +3,8 @@ import ./src/core/scene.bend as Scene
 import ./LAWS.bend as Laws
 import ./spec/navigation/model.bend as NavigationModel
 import ./src/core/navigation_model.bend as NavigationModelImpl
+import ./spec/navigation/axis.bend as NavigationAxis
+import ./src/core/navigation_axis.bend as NavigationAxisImpl
 
 def Laws.one_character_per_cell(value):
   match value:
@@ -226,3 +228,493 @@ def NavigationModel.contents_at(f, p, ok):
 
 def NavigationModel.contents_printable(f):
   norm_printable(f, 800n)
+
+law add40_lt:
+  for +x: Nat
+  for +y: Nat
+  for h: {Nat.is_lt(Nat.add(40n, x), Nat.add(40n, y)) == True{} : Bool}
+  {Nat.is_lt(x, y) == True{} : Bool}
+
+def add40_lt(x, y, h):
+  h
+
+law div_bound:
+  for +d: Nat
+  for +r: Nat
+  for +b: Nat
+  for h: {Nat.is_lt(Nat.add(Nat.mul(d, 40n), r), Nat.mul(b, 40n)) == True{} : Bool}
+  {Nat.is_lt(d, b) == True{} : Bool}
+
+def div_bound(d, r, b, h):
+  match d:
+    case 0n:
+      match b:
+        case 0n:
+          empty_elim({Nat.is_lt(0n, 0n) == True{} : Bool}, false_elim(r, h))
+        case 1n+q:
+          {==}
+    case 1n+p:
+      match b:
+        case 0n:
+          empty_elim({Nat.is_lt(1n+p, 0n) == True{} : Bool},
+            false_elim(Nat.add(Nat.mul(1n+p, 40n), r), h))
+        case 1n+q:
+          div_bound(p, r, q,
+            add40_lt(Nat.add(Nat.mul(p, 40n), r), Nat.mul(q, 40n), h))
+
+law add_zero_r:
+  for +a: Nat
+  {Nat.add(a, 0n) == a : Nat}
+
+def add_zero_r(a):
+  match a:
+    case 0n:
+      {==}
+    case 1n+p:
+      %add_zero_r(p) : {1n+Nat.add(p, 0n) == 1n+_ : Nat}
+      {==}
+
+law add_succ_r:
+  for +a: Nat
+  for +b: Nat
+  {Nat.add(a, 1n+b) == 1n+Nat.add(a, b) : Nat}
+
+def add_succ_r(a, b):
+  match a:
+    case 0n:
+      {==}
+    case 1n+p:
+      %add_succ_r(p, b) : {1n+Nat.add(p, 1n+b) == 1n+_ : Nat}
+      {==}
+
+law add_comm:
+  for +a: Nat
+  for +b: Nat
+  {Nat.add(a, b) == Nat.add(b, a) : Nat}
+
+def add_comm(a, b):
+  match a:
+    case 0n:
+      %Equal.sym(Nat, Nat.add(b, 0n), b, add_zero_r(b)) : {b == _ : Nat}
+      {==}
+    case 1n+p:
+      %Equal.sym(Nat, Nat.add(b, 1n+p), 1n+Nat.add(b, p), add_succ_r(b, p)) :
+        {1n+Nat.add(p, b) == _ : Nat}
+      %Equal.sym(Nat, Nat.add(p, b), Nat.add(b, p), add_comm(p, b)) :
+        {1n+_ == 1n+Nat.add(b, p) : Nat}
+      {==}
+    case 1n+p:
+      %Equal.sym(Nat, Nat.add(b, p), 1n+Nat.add(b, p), add_succ_r(b, p)) :
+        {1n+Nat.add(p, b) == _ : Nat}
+      %Equal.sym(Nat, Nat.add(b, p), Nat.add(p, b), add_comm(p, b)) :
+        {1n+_ == 1n+Nat.add(b, p) : Nat}
+      {==}
+    case 1n+p:
+      %add_succ_r(b, p) :
+        {1n+Nat.add(p, b) == 1n+_ : Nat}
+      %add_comm(p, b) : {1n+Nat.add(p, b) == 1n+_ : Nat}
+      {==}
+
+law inv_step_rem:
+  for +n: Nat
+  for +d: Nat
+  for +r: Nat
+  for +x: Nat
+  for eq: {Nat.add(1n+n, Nat.add(Nat.mul(d, 40n), r)) == x : Nat}
+  {Nat.add(n, Nat.add(Nat.mul(d, 40n), 1n+r)) == x : Nat}
+
+def inv_step_rem(n, d, r, x, eq):
+  %Equal.sym(Nat, Nat.add(Nat.mul(d, 40n), 1n+r),
+    1n+Nat.add(Nat.mul(d, 40n), r), add_succ_r(Nat.mul(d, 40n), r)) :
+    {Nat.add(n, _) == x : Nat}
+  %Equal.sym(Nat, Nat.add(n, 1n+Nat.add(Nat.mul(d, 40n), r)),
+    1n+Nat.add(n, Nat.add(Nat.mul(d, 40n), r)),
+    add_succ_r(n, Nat.add(Nat.mul(d, 40n), r))) :
+    {_ == x : Nat}
+  eq
+
+law inv_step_reset:
+  for +n: Nat
+  for +d: Nat
+  for +r: Nat
+  for +x: Nat
+  for eq: {Nat.add(1n+n, Nat.add(Nat.mul(d, 40n), r)) == x : Nat}
+  for r39: {r == 39n : Nat}
+  {Nat.add(n, Nat.add(Nat.mul(1n+d, 40n), 0n)) == x : Nat}
+
+def inv_step_reset(n, d, r, x, eq, r39):
+  %Equal.sym(Nat, Nat.add(Nat.mul(1n+d, 40n), 0n), Nat.mul(1n+d, 40n),
+    add_zero_r(Nat.mul(1n+d, 40n))) :
+    {Nat.add(n, _) == x : Nat}
+  %Equal.sym(Nat, Nat.add(n, 1n+Nat.add(39n, Nat.mul(d, 40n))),
+    1n+Nat.add(n, Nat.add(39n, Nat.mul(d, 40n))),
+    add_succ_r(n, Nat.add(39n, Nat.mul(d, 40n)))) :
+    {_ == x : Nat}
+  %Equal.sym(Nat, Nat.add(39n, Nat.mul(d, 40n)), Nat.add(Nat.mul(d, 40n), 39n),
+    add_comm(39n, Nat.mul(d, 40n))) :
+    {1n+Nat.add(n, _) == x : Nat}
+  %r39 :
+    {1n+Nat.add(n, Nat.add(Nat.mul(d, 40n), _)) == x : Nat}
+  eq
+
+
+law rm_step_rem:
+  for +r: Nat
+  for +m: Nat
+  for rm: {Nat.add(r, 1n+m) == 39n : Nat}
+  {Nat.add(1n+r, m) == 39n : Nat}
+
+def rm_step_rem(r, m, rm):
+  %add_succ_r(r, m) : {_ == 39n : Nat}
+  rm
+
+def lt_of_eq(x: Nat, y: Nat, eq: {x == y : Nat},
+  h: {Nat.is_lt(y, 800n) == True{} : Bool}) ->
+  {Nat.is_lt(x, 800n) == True{} : Bool}:
+  Equal.trans(Bool, Nat.is_lt(x, 800n), Nat.is_lt(y, 800n), True{},
+    Equal.cong(Nat, Bool, (z => Nat.is_lt(z, 800n)), x, y, eq), h)
+
+law div_bound_800:
+  for +d: Nat
+  for +r: Nat
+  for h: {Nat.is_lt(Nat.add(Nat.mul(d, 40n), r), 800n) == True{} : Bool}
+  {Nat.is_lt(d, 20n) == True{} : Bool}
+
+def div_bound_800(d, r, h):
+  div_bound(d, r, 20n, h)
+
+def r_of_rm_zero(r: Nat, rm: {Nat.add(r, 0n) == 39n : Nat}) ->
+  {r == 39n : Nat}:
+  Equal.trans(Nat, r, Nat.add(r, 0n), 39n,
+    Equal.sym(Nat, Nat.add(r, 0n), r, add_zero_r(r)), rm)
+
+law divmod_go_quot:
+  for +a: Nat
+  for +n: Nat
+  for +m: Nat
+  for +d: Nat
+  for +r: Nat
+  for inv: {Nat.add(n, Nat.add(Nat.mul(d, 40n), r)) == a : Nat}
+  for +rm: {Nat.add(r, m) == 39n : Nat}
+  for h: {Nat.is_lt(a, 800n) == True{} : Bool}
+  {Nat.is_lt(Pair.fst(Nat, Nat, Nat.divmod.go(n, m, d, r)), 20n) == True{} : Bool}
+
+def divmod_go_quot(a, n, m, d, r, inv, rm, h):
+  match n:
+    case 0n:
+      div_bound_800(d, r, lt_of_eq(Nat.add(Nat.mul(d, 40n), r), a, inv, h))
+    case 1n+np:
+      match m:
+        case 0n:
+          divmod_go_quot(a, np, r, 1n+d, 0n,
+            inv_step_reset(np, d, r, a, inv, r_of_rm_zero(r, rm)),
+            r_of_rm_zero(r, rm), h)
+        case 1n+mp:
+          divmod_go_quot(a, np, mp, d, 1n+r,
+            inv_step_rem(np, d, r, a, inv), rm_step_rem(r, mp, rm), h)
+
+law lt_add_left:
+  for +c: Nat
+  for +k: Nat
+  for +x: Nat
+  for h: {Nat.is_lt(c, k) == True{} : Bool}
+  {Nat.is_lt(c, Nat.add(k, x)) == True{} : Bool}
+
+def lt_add_left(c, k, x, h):
+  match c:
+    case 0n:
+      match k:
+        case 0n:
+          empty_elim({Nat.is_lt(0n, Nat.add(0n, x)) == True{} : Bool},
+            false_elim(0n, h))
+        case 1n+q:
+          {==}
+    case 1n+p:
+      match k:
+        case 0n:
+          empty_elim({Nat.is_lt(1n+p, Nat.add(0n, x)) == True{} : Bool},
+            false_elim(1n+p, h))
+        case 1n+q:
+          lt_add_left(p, q, x, h)
+
+law lt_succ:
+  for +a: Nat
+  for +b: Nat
+  for h: {Nat.is_lt(a, b) == True{} : Bool}
+  {Nat.is_lt(a, 1n+b) == True{} : Bool}
+
+def lt_succ(a, b, h):
+  match a:
+    case 0n:
+      {==}
+    case 1n+p:
+      match b:
+        case 0n:
+          empty_elim({Nat.is_lt(1n+p, 1n+0n) == True{} : Bool},
+            false_elim(1n+p, h))
+        case 1n+q:
+          lt_succ(p, q, h)
+
+law sub_lt:
+  for +c: Nat
+  for +n: Nat
+  for +k: Nat
+  for h: {Nat.is_lt(c, k) == True{} : Bool}
+  {Nat.is_lt(Nat.sub(c, n), k) == True{} : Bool}
+
+def sub_lt(c, n, k, h):
+  match c:
+    case 0n:
+      match k:
+        case 0n:
+          empty_elim({Nat.is_lt(Nat.sub(0n, n), 0n) == True{} : Bool},
+            false_elim(0n, h))
+        case 1n+t:
+          {==}
+    case 1n+p:
+      match n:
+        case 0n:
+          h
+        case 1n+q:
+          match k:
+            case 0n:
+              empty_elim({Nat.is_lt(Nat.sub(1n+p, 1n+q), 0n) == True{} : Bool},
+                false_elim(1n+p, h))
+            case 1n+t:
+              lt_succ(Nat.sub(p, q), t, sub_lt(p, q, t, h))
+
+law min_lt:
+  for +a: Nat
+  for +b: Nat
+  for +k: Nat
+  for h: {Nat.is_lt(a, k) == True{} : Bool}
+  {Nat.is_lt(Nat.min(a, b), k) == True{} : Bool}
+
+def min_lt(a, b, k, h):
+  match a:
+    case 0n:
+      match k:
+        case 0n:
+          empty_elim({Nat.is_lt(Nat.min(0n, b), 0n) == True{} : Bool},
+            false_elim(0n, h))
+        case 1n+t:
+          {==}
+    case 1n+p:
+      match b:
+        case 0n:
+          match k:
+            case 0n:
+              empty_elim({Nat.is_lt(Nat.min(1n+p, 0n), 0n) == True{} : Bool},
+                false_elim(1n+p, h))
+            case 1n+t:
+              {==}
+        case 1n+q:
+          match k:
+            case 0n:
+              empty_elim({Nat.is_lt(Nat.min(1n+p, 1n+q), 0n) == True{} : Bool},
+                false_elim(1n+p, h))
+            case 1n+t:
+              min_lt(p, q, t, h)
+
+law add_mul_lt:
+  for +r: Nat
+  for +c: Nat
+  for +k: Nat
+  for rc: {Nat.is_lt(r, k) == True{} : Bool}
+  for cc: {Nat.is_lt(c, 40n) == True{} : Bool}
+  {Nat.is_lt(Nat.add(Nat.mul(r, 40n), c), Nat.mul(k, 40n)) == True{} : Bool}
+
+def add_mul_lt(r, c, k, rc, cc):
+  match r:
+    case 0n:
+      match k:
+        case 0n:
+          empty_elim({Nat.is_lt(Nat.add(Nat.mul(0n, 40n), c), Nat.mul(0n, 40n)) == True{} : Bool},
+            false_elim(0n, rc))
+        case 1n+q:
+          lt_add_left(c, 40n, Nat.mul(q, 40n), cc)
+    case 1n+p:
+      match k:
+        case 0n:
+          empty_elim({Nat.is_lt(Nat.add(Nat.mul(1n+p, 40n), c), Nat.mul(0n, 40n)) == True{} : Bool},
+            false_elim(1n+p, rc))
+        case 1n+q:
+          add_mul_lt(p, c, q, rc, cc)
+
+
+
+def zero_disc(n: Nat) -> Type:
+  match n:
+    case 0n:
+      Unit
+    case 1n+p:
+      Empty
+
+def empty_of_unit_eq(e: {Empty == Unit : Type}) -> Empty:
+  %Equal.sym(Type, Empty, Unit, e) : {_ : Type}
+  Unit{}
+
+def succ_ne_zero(n: Nat, e: {1n+n == 0n : Nat}) -> Empty:
+  empty_of_unit_eq(Equal.cong(Nat, Type, zero_disc, 1n+n, 0n, e))
+
+def pred(n: Nat) -> Nat:
+  match n:
+    case 0n:
+      0n
+    case 1n+p:
+      p
+
+def succ_inj(a: Nat, b: Nat, e: {1n+a == 1n+b : Nat}) -> {a == b : Nat}:
+  Equal.cong(Nat, Nat, pred, 1n+a, 1n+b, e)
+
+law zero_lt_add_one:
+  for +m: Nat
+  {Nat.is_lt(0n, Nat.add(m, 1n)) == True{} : Bool}
+
+def zero_lt_add_one(m):
+  match m:
+    case 0n:
+      {==}
+    case 1n+p:
+      {==}
+
+law add_eq_lt_succ:
+  for +r: Nat
+  for +m: Nat
+  for +k: Nat
+  for eq: {Nat.add(r, m) == k : Nat}
+  {Nat.is_lt(r, Nat.add(k, 1n)) == True{} : Bool}
+
+def add_eq_lt_succ(r, m, k, eq):
+  match r:
+    case 0n:
+      %eq : {Nat.is_lt(0n, Nat.add(_, 1n)) == True{} : Bool}
+      zero_lt_add_one(m)
+    case 1n+p:
+      match k:
+        case 0n:
+          empty_elim({Nat.is_lt(1n+p, Nat.add(0n, 1n)) == True{} : Bool},
+            succ_ne_zero(Nat.add(p, m), eq))
+        case 1n+q:
+          add_eq_lt_succ(p, m, q, succ_inj(Nat.add(p, m), q, eq))
+
+law divmod_go_rem:
+  for +a: Nat
+  for +n: Nat
+  for +m: Nat
+  for +d: Nat
+  for +r: Nat
+  for inv: {Nat.add(n, Nat.add(Nat.mul(d, 40n), r)) == a : Nat}
+  for +rm: {Nat.add(r, m) == 39n : Nat}
+  {Nat.is_lt(Pair.snd(Nat, Nat, Nat.divmod.go(n, m, d, r)), 40n) == True{} : Bool}
+
+def divmod_go_rem(a, n, m, d, r, inv, rm):
+  match n:
+    case 0n:
+      add_eq_lt_succ(r, m, 39n, rm)
+    case 1n+np:
+      match m:
+        case 0n:
+          divmod_go_rem(a, np, r, 1n+d, 0n,
+            inv_step_reset(np, d, r, a, inv, r_of_rm_zero(r, rm)),
+            r_of_rm_zero(r, rm))
+        case 1n+mp:
+          divmod_go_rem(a, np, mp, d, 1n+r,
+            inv_step_rem(np, d, r, a, inv), rm_step_rem(r, mp, rm))
+
+law row_lt_20:
+  for +p: Nat
+  for +ok: {NavigationModel.inside(p) == True{} : Bool}
+  {Nat.is_lt(NavigationModel.row(p), 20n) == True{} : Bool}
+
+def row_lt_20(p, ok):
+  divmod_go_quot(p, p, 39n, 0n, 0n, add_zero_r(p), {==}, ok)
+
+law col_lt_40:
+  for +p: Nat
+  for +ok: {NavigationModel.inside(p) == True{} : Bool}
+  {Nat.is_lt(NavigationModel.column(p), 40n) == True{} : Bool}
+
+def col_lt_40(p, ok):
+  divmod_go_rem(p, p, 39n, 0n, 0n, add_zero_r(p), {==})
+
+law index_inside:
+  for +r: Nat
+  for +c: Nat
+  for hr: {Nat.is_lt(r, 20n) == True{} : Bool}
+  for hc: {Nat.is_lt(c, 40n) == True{} : Bool}
+  {NavigationModel.inside(NavigationModel.index(r, c)) == True{} : Bool}
+
+def index_inside(r, c, hr, hc):
+  add_mul_lt(r, c, 20n, hr, hc)
+
+law left_inside:
+  for +p: Nat
+  for +n: Nat
+  for +ok: {NavigationModel.inside(p) == True{} : Bool}
+  {NavigationModel.inside(NavigationModel.index(NavigationModel.row(p),
+    Nat.sub(NavigationModel.column(p), n))) == True{} : Bool}
+
+def left_inside(p, n, ok):
+  index_inside(NavigationModel.row(p), Nat.sub(NavigationModel.column(p), n),
+    row_lt_20(p, ok), sub_lt(NavigationModel.column(p), n, 40n, col_lt_40(p, ok)))
+
+law right_inside:
+  for +p: Nat
+  for +n: Nat
+  for +ok: {NavigationModel.inside(p) == True{} : Bool}
+  {NavigationModel.inside(NavigationModel.index(NavigationModel.row(p),
+    Nat.min(39n, Nat.add(NavigationModel.column(p), n)))) == True{} : Bool}
+
+def right_inside(p, n, ok):
+  index_inside(NavigationModel.row(p),
+    Nat.min(39n, Nat.add(NavigationModel.column(p), n)),
+    row_lt_20(p, ok),
+    min_lt(39n, Nat.add(NavigationModel.column(p), n), 40n, {==}))
+
+law up_inside:
+  for +p: Nat
+  for +n: Nat
+  for +ok: {NavigationModel.inside(p) == True{} : Bool}
+  {NavigationModel.inside(NavigationModel.index(Nat.sub(NavigationModel.row(p), n),
+    NavigationModel.column(p))) == True{} : Bool}
+
+def up_inside(p, n, ok):
+  index_inside(Nat.sub(NavigationModel.row(p), n), NavigationModel.column(p),
+    sub_lt(NavigationModel.row(p), n, 20n, row_lt_20(p, ok)), col_lt_40(p, ok))
+
+law down_inside:
+  for +p: Nat
+  for +n: Nat
+  for +ok: {NavigationModel.inside(p) == True{} : Bool}
+  {NavigationModel.inside(NavigationModel.index(Nat.min(19n,
+    Nat.add(NavigationModel.row(p), n)), NavigationModel.column(p))) == True{} : Bool}
+
+def down_inside(p, n, ok):
+  index_inside(Nat.min(19n, Nat.add(NavigationModel.row(p), n)),
+    NavigationModel.column(p),
+    min_lt(19n, Nat.add(NavigationModel.row(p), n), 20n, {==}),
+    col_lt_40(p, ok))
+
+def NavigationAxis.left(p, n, ok):
+  {==}
+
+def NavigationAxis.right(p, n, ok):
+  {==}
+
+def NavigationAxis.up(p, n, ok):
+  {==}
+
+def NavigationAxis.down(p, n, ok):
+  {==}
+
+def NavigationAxis.bounded(p, direction, n, ok):
+  match direction:
+    case NavigationAxis.Left{}:
+      left_inside(p, n, ok)
+    case NavigationAxis.Down{}:
+      down_inside(p, n, ok)
+    case NavigationAxis.Up{}:
+      up_inside(p, n, ok)
+    case NavigationAxis.Right{}:
+      right_inside(p, n, ok)
