@@ -10,6 +10,13 @@ The game is free. The author's goals are to relive Vim, try Bend 2, gain
 attention, and test the fastest possible AI iteration strategies. Bend is
 chosen here; adopting it for later projects depends on what this teaches us.
 
+*Clarified by the author, 2026-10-26:* Identify useful workflows with Bend that
+raise AI code quality, save tokens by reducing erroneous approaches, or ideally
+do both. Compare total planning, implementation, proof, review and repair work;
+neither benefit is assumed. The ordinary TypeScript/Bun comparison lives in the
+separate personal repository [vim-flow-ts](https://github.com/Torwalt/vim-flow-ts).
+See the [working planning findings](workflows/bend-planning.md).
+
 ## Candidate gameplay
 
 The preferred direction is an old-school 2D RTS/wargame, with Dune, Command &

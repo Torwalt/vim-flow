@@ -1,5 +1,10 @@
 # vim-flow
 
+This project's workflow research asks whether Bend's laws and proofs improve
+AI code quality and/or reduce total token cost by limiting erroneous approaches.
+See [measured findings and planning rules](docs/workflows/bend-planning.md) and
+the ordinary TypeScript comparison at [vim-flow-ts](https://github.com/Torwalt/vim-flow-ts).
+
 A free browser game about reliving fluent Vim use, and an experiment in Bend 2
 and fast AI iteration. Currently a playable navigation pass: the proved Bend
 model draws a seeded 40x20 field on Canvas, with keyboard navigation, counts,
