@@ -32,9 +32,12 @@ def nonblank(+text: String, +r: Nat, +p: Nat) -> Bool:
   Bool.and(M.inside(p), Bool.and(Nat.is_eq(M.row(p), r),
     Bool.not(Char.is_eq(M.text_at(text, p), ' '))))
 
+# A nonblank result carries its own row/inside evidence. The all-space fallback
+# is the literal column-zero cell of the target row, which is equivalent to the
+# original inside/row/column-zero conjunction.
 def IndentSelected(+text: String, +r: Nat, +out: Nat) -> Type:
-  {Bool.and(M.inside(out), Bool.and(Nat.is_eq(M.row(out), r),
-    Bool.or(nonblank(text, r, out), Nat.is_eq(M.column(out), 0n)))) == True{} : Bool}
+  {Bool.or(nonblank(text, r, out),
+    Bool.and(M.inside(out), Nat.is_eq(out, M.index(r, 0n)))) == True{} : Bool}
   & (@+q: Nat -> {Bool.or(Bool.not(nonblank(text, r, q)),
     Bool.and(nonblank(text, r, out), Nat.is_le(out, q))) == True{} : Bool})
 

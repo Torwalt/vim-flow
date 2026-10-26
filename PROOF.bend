@@ -7,6 +7,8 @@ import ./spec/navigation/axis.bend as NavigationAxis
 import ./src/core/navigation_axis.bend as NavigationAxisImpl
 import ./spec/navigation/words.bend as NavigationWords
 import ./src/core/navigation_words.bend as NavigationWordsImpl
+import ./spec/navigation/lines.bend as NavigationLines
+import ./src/core/navigation_lines.bend as NavigationLinesImpl
 
 def Laws.one_character_per_cell(value):
   match value:
@@ -1365,3 +1367,205 @@ def move_inside(n, field, p, motion, big, ok):
 
 def NavigationWords.bounded(f, p, motion, big, n, ok):
   move_inside(n, f, p, motion, big, ok)
+
+def or_true_of_true_l(a: Bool, b: Bool, e: {a == True{} : Bool}) ->
+  {Bool.or(a, b) == True{} : Bool}:
+  Equal.trans(Bool, Bool.or(a,b), Bool.or(True{},b), True{},
+    Equal.cong(Bool, Bool, (z => Bool.or(z,b)), a, True{}, e), {==})
+
+def or_true_of_true_r(a: Bool, b: Bool, e: {b == True{} : Bool}) ->
+  {Bool.or(a, b) == True{} : Bool}:
+  Equal.trans(Bool, Bool.or(a,b), Bool.or(a,True{}), True{},
+    Equal.cong(Bool, Bool, (z => Bool.or(a,z)), b, True{}, e), or_true_r(a))
+
+def line_nonblank_congr(+text: String, +r: Nat, +a: Nat, +b: Nat,
+  e: {a == b : Nat}) ->
+  {NavigationLines.nonblank(text,r,a) == NavigationLines.nonblank(text,r,b) : Bool}:
+  Equal.cong(Nat, Bool, (z => NavigationLines.nonblank(text,r,z)), a, b, e)
+
+def line_nonblank_inside(+text: String, +r: Nat, +q: Nat,
+  h: {NavigationLines.nonblank(text,r,q) == True{} : Bool}) ->
+  {NavigationModel.inside(q) == True{} : Bool}:
+  and_left(NavigationModel.inside(q),
+    Bool.and(Nat.is_eq(NavigationModel.row(q),r),
+      Bool.not(Char.is_eq(NavigationModel.text_at(text,q), ' '))), h)
+
+def line_candidates_conflict(+text: String, +r: Nat, +a: Nat, +b: Nat,
+  hf: {NavigationLines.nonblank(text,r,a) == False{} : Bool},
+  ht: {NavigationLines.nonblank(text,r,b) == True{} : Bool},
+  h: {Nat.is_eq(a,b) == True{} : Bool}) -> Empty:
+  absurd_eq(Equal.trans(Bool, False{}, NavigationLines.nonblank(text,r,a), True{},
+    Equal.sym(Bool, NavigationLines.nonblank(text,r,a), False{}, hf),
+    Equal.trans(Bool, NavigationLines.nonblank(text,r,a),
+      NavigationLines.nonblank(text,r,b), True{},
+      line_nonblank_congr(text,r,a,b, is_eq_eq(a,b,h)), ht)))
+
+def ne_of_line_candidates_conflict(+text: String, +r: Nat, +a: Nat, +b: Nat,
+  hf: {NavigationLines.nonblank(text,r,a) == False{} : Bool},
+  ht: {NavigationLines.nonblank(text,r,b) == True{} : Bool}) ->
+  {Nat.is_ne(a,b) == True{} : Bool}:
+  not_true_of_contra(Nat.is_eq(a,b),
+    (h => line_candidates_conflict(text,r,a,b,hf,ht,h)))
+
+law line_scan_indent:
+  for +text: String
+  for +r: Nat
+  for +fuel: Nat
+  for +q: Nat
+  for +c: Bool
+  for hc: {c == NavigationLines.nonblank(text,r,q) : Bool}
+  for hr: {Nat.is_lt(r,20n) == True{} : Bool}
+  {Bool.or(NavigationLines.nonblank(text,r,
+      NavigationLinesImpl.scan_first(text,r,fuel,q,c)),
+    Bool.and(NavigationModel.inside(
+      NavigationLinesImpl.scan_first(text,r,fuel,q,c)),
+      Nat.is_eq(NavigationLinesImpl.scan_first(text,r,fuel,q,c),
+        NavigationModel.index(r,0n)))) == True{} : Bool}
+
+def line_scan_indent(text, r, fuel, q, c, hc, hr):
+  match fuel:
+    case 0n:
+      or_true_of_true_r(
+        NavigationLines.nonblank(text,r,NavigationModel.index(r,0n)),
+        Bool.and(NavigationModel.inside(NavigationModel.index(r,0n)),
+          Nat.is_eq(NavigationModel.index(r,0n), NavigationModel.index(r,0n))),
+        and_intro(NavigationModel.inside(NavigationModel.index(r,0n)),
+          Nat.is_eq(NavigationModel.index(r,0n), NavigationModel.index(r,0n)),
+          index_inside(r, 0n, hr, {==}),
+          is_eq_refl(NavigationModel.index(r,0n))))
+    case 1n+k:
+      match c:
+        case True{}:
+          or_true_of_true_l(
+            NavigationLines.nonblank(text,r,q),
+            Bool.and(NavigationModel.inside(q),
+              Nat.is_eq(q, NavigationModel.index(r,0n))),
+            Equal.sym(Bool, True{}, NavigationLines.nonblank(text,r,q), hc))
+        case False{}:
+          line_scan_indent(text, r, k, Nat.add(q,1n),
+            NavigationLines.nonblank(text,r,Nat.add(q,1n)), {==}, hr)
+
+law line_scan_min:
+  for +text: String
+  for +r: Nat
+  for +fuel: Nat
+  for +q: Nat
+  for +q0: Nat
+  for +c: Bool
+  for hc: {c == NavigationLines.nonblank(text,r,q) : Bool}
+  for +hq: {NavigationLines.nonblank(text,r,q0) == True{} : Bool}
+  for +hle: {Nat.is_le(q,q0) == True{} : Bool}
+  for hlt: {Nat.is_lt(q0, Nat.add(q,fuel)) == True{} : Bool}
+  {Bool.and(NavigationLines.nonblank(text,r,
+      NavigationLinesImpl.scan_first(text,r,fuel,q,c)),
+    Nat.is_le(NavigationLinesImpl.scan_first(text,r,fuel,q,c),q0)) == True{} : Bool}
+
+def line_scan_min(text, r, fuel, q, q0, c, hc, hq, hle, hlt):
+  match fuel:
+    case 0n:
+      empty_elim({Bool.and(NavigationLines.nonblank(text,r,
+          NavigationLinesImpl.scan_first(text,r,0n,q,c)),
+        Nat.is_le(NavigationLinesImpl.scan_first(text,r,0n,q,c),q0)) == True{} : Bool},
+        absurd_eq(le_lt_absurd(q, q0, hle, lt_add_zero_r(q,q0,hlt))))
+    case 1n+k:
+      match c:
+        case True{}:
+          and_intro(NavigationLines.nonblank(text,r,q), Nat.is_le(q,q0),
+            Equal.sym(Bool, True{}, NavigationLines.nonblank(text,r,q), hc), hle)
+        case False{}:
+          line_scan_min(text, r, k, Nat.add(q,1n), q0,
+            NavigationLines.nonblank(text,r,Nat.add(q,1n)), {==}, hq,
+            succ_le_of_lt(q, q0,
+              lt_of_le_ne(q, q0, hle,
+                ne_of_line_candidates_conflict(text,r,q,q0,
+                  Equal.sym(Bool, False{}, NavigationLines.nonblank(text,r,q), hc),
+                  hq))),
+            lt_add_one_assoc(q, k, q0, hlt))
+
+law line_scan_inside:
+  for +text: String
+  for +r: Nat
+  for +fuel: Nat
+  for +q: Nat
+  for +c: Bool
+  for hc: {c == NavigationLines.nonblank(text,r,q) : Bool}
+  for hr: {Nat.is_lt(r,20n) == True{} : Bool}
+  {NavigationModel.inside(NavigationLinesImpl.scan_first(text,r,fuel,q,c)) ==
+    True{} : Bool}
+
+def line_scan_inside(text, r, fuel, q, c, hc, hr):
+  match fuel:
+    case 0n:
+      index_inside(r, 0n, hr, {==})
+    case 1n+k:
+      match c:
+        case True{}:
+          line_nonblank_inside(text, r, q,
+            Equal.sym(Bool, True{}, NavigationLines.nonblank(text,r,q), hc))
+        case False{}:
+          line_scan_inside(text, r, k, Nat.add(q,1n),
+            NavigationLines.nonblank(text,r,Nat.add(q,1n)), {==}, hr)
+
+def line_indent_selected(+text: String, +r: Nat,
+  hr: {Nat.is_lt(r,20n) == True{} : Bool}) ->
+  NavigationLines.IndentSelected(text, r, NavigationLinesImpl.first_nonblank(text,r)):
+  ( line_scan_indent(text,r,800n,0n,NavigationLines.nonblank(text,r,0n),{==},hr),
+    (q0 => or_not_min(NavigationLines.nonblank(text,r,q0),
+      Bool.and(NavigationLines.nonblank(text,r,
+        NavigationLinesImpl.first_nonblank(text,r)),
+        Nat.is_le(NavigationLinesImpl.first_nonblank(text,r),q0)),
+      (+hq => line_scan_min(text,r,800n,0n,q0,NavigationLines.nonblank(text,r,0n),
+        {==},hq,zero_le(q0),line_nonblank_inside(text,r,q0,hq)))) ))
+
+def NavigationLines.zero_column(f, p, n, ok):
+  {==}
+
+def NavigationLines.row_end(f, p, n, ok):
+  {==}
+
+def NavigationLines.first_nonblank(f, p, n, ok):
+  line_indent_selected(NavigationModel.contents(f), NavigationModel.row(p),
+    row_lt_20(p, ok))
+
+def NavigationLines.first_row(f, p, n, ok):
+  line_indent_selected(NavigationModel.contents(f),
+    NavigationLines.target_row(p, NavigationLines.FirstRow{}, n),
+    min_lt(19n, Nat.sub(n,1n), 20n, {==}))
+
+def NavigationLines.last_row(f, p, n, ok):
+  line_indent_selected(NavigationModel.contents(f),
+    NavigationLines.target_row(p, NavigationLines.LastRow{}, n),
+    min_lt(19n, Nat.sub(Nat.add(n,
+      Nat.mul(20n, NavigationModel.bit(Nat.is_eq(n,0n)))),1n), 20n, {==}))
+
+def line_bounded(+f: NavigationModel.Field, +p: Nat, motion: NavigationLines.Motion,
+  +n: Nat, ok: {NavigationModel.inside(p) == True{} : Bool}) ->
+  {NavigationModel.inside(NavigationLinesImpl.move_impl(f,p,motion,n)) ==
+    True{} : Bool}:
+  match motion:
+    case NavigationLines.ColumnZero{}:
+      index_inside(NavigationModel.row(p), 0n, row_lt_20(p, ok), {==})
+    case NavigationLines.FirstNonblank{}:
+      line_scan_inside(NavigationModelImpl.norm(800n, f), NavigationModel.row(p),
+        800n, 0n, NavigationLines.nonblank(NavigationModelImpl.norm(800n, f),
+          NavigationModel.row(p), 0n), {==}, row_lt_20(p, ok))
+    case NavigationLines.RowEnd{}:
+      index_inside(NavigationLines.target_row(p, NavigationLines.RowEnd{}, n), 39n,
+        min_lt(19n, Nat.add(NavigationModel.row(p),
+          Nat.sub(NavigationModel.effective(n),1n)), 20n, {==}), {==})
+    case NavigationLines.FirstRow{}:
+      line_scan_inside(NavigationModelImpl.norm(800n, f),
+        NavigationLines.target_row(p, NavigationLines.FirstRow{}, n),
+        800n, 0n, NavigationLines.nonblank(NavigationModelImpl.norm(800n, f),
+          NavigationLines.target_row(p, NavigationLines.FirstRow{}, n), 0n),
+        {==}, min_lt(19n, Nat.sub(n,1n), 20n, {==}))
+    case NavigationLines.LastRow{}:
+      line_scan_inside(NavigationModelImpl.norm(800n, f),
+        NavigationLines.target_row(p, NavigationLines.LastRow{}, n),
+        800n, 0n, NavigationLines.nonblank(NavigationModelImpl.norm(800n, f),
+          NavigationLines.target_row(p, NavigationLines.LastRow{}, n), 0n),
+        {==}, min_lt(19n, Nat.sub(Nat.add(n,
+          Nat.mul(20n, NavigationModel.bit(Nat.is_eq(n,0n)))),1n), 20n, {==}))
+
+def NavigationLines.bounded(f, p, motion, n, ok):
+  line_bounded(f, p, motion, n, ok)

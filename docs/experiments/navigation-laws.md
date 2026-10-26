@@ -135,6 +135,32 @@ separate: `counted` is the one-step decomposition of the recursive move, and
 candidate predicate only through its flag and public classification helpers; it
 does not evaluate a concrete fixture or replace the universal law with examples.
 
+## Unit 4.1 contract revision — first-non-space fallback
+
+The old `IndentSelected` first conjunct required
+`inside(out) && row(out) = r && (nonblank(out) || column(out) = 0)`. The new
+conjunct is `nonblank(out) || (inside(out) && out = index(r, 0))`. The
+minimality conjunct is unchanged.
+
+The motivation was proof arithmetic, not an observed behavior change: the
+relational scan can certify a found cell through `nonblank`, which already
+contains `inside` and `row`, but the all-space fallback `index(r, 0)` would
+otherwise need quotient/remainder equalities for `row` and `column`. The
+literal fallback cell states the same column-zero destination of the target row
+directly. Every found branch maps through `nonblank` to the old inside/row
+evidence; every fallback branch maps through `out = index(r, 0)` to the old
+inside/row/column-zero evidence. No parameter domain, observation or
+destination changed, and the minimality obligation is untouched.
+
+The implementation scans all 800 cells with `nonblank` as the candidate and
+returns the first hit, or `index(r, 0)` when fuel expires. `line_scan_indent`
+derives the fallback disjunction, `line_scan_min` proves the selected hit is at
+least as near as every candidate, and `line_scan_inside` supplies the bound.
+The first, last and relative row targets are bounded by `min_lt(19, _, 20)`.
+Checks: `just contract` reports 63 declarations matching the recorded manifest
+after the `lines.bend` hash update; `just proof` (kernel `--verdict`),
+`just verify` and `direnv exec . just test` are green.
+
 ## Workflow and skill findings
 
 The stopped first unit exposed an erased-premise obstacle and repeated proof
