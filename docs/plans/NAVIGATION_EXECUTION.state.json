@@ -129,6 +129,32 @@
         "reasoning": 184989,
         "cache_read": 40583680
       }
+    },
+    "6.1": {
+      "status": "landed",
+      "outcome": "done",
+      "date": "2026-10-26T19:54:24+01:00",
+      "agent": "opencode deepseek/deepseek-flash high",
+      "base": "4f32b6afd66b38bdf6bfe65f4015bd37aa5288a9",
+      "commits": [
+        "72580080083bd44749109415e2c26bdb41f1b423 Implement counted navigation input in Bend",
+        "258fea48dccd784c9a9091c7953930ef03d105c9 Record input experiment evidence"
+      ],
+      "attempts": 1,
+      "handover": "# Handover 6.1\n\n## What landed\n\n- `7258008` implements `spec/navigation/input.bend`: all 24 declarations are\n  filled/proved (the `step` declaration and 23 laws), `input.bend` is active in\n  `LAWS.bend`, and earlier modules stay active. It adds\n  `src/core/navigation_input.bend`, the `src/core/navigation.bend` facade with\n  `navigation.d.bend.ts`, boundary tests, and the recorded helper revisions.\n- `258fea4` records the unit row and contract revision in\n  `docs/experiments/navigation-laws.md`.\n- `just verify` is green: contract 63 declarations, `PROOF.bend --verdict`,\n  typecheck, Bun tests, both browser baselines, benchpress lint.\n\n## Landmark drift\n\nNone. All found/line/model/word/axis landmarks matched the work order.\n\n## Deviations from the work order\n\n- Two documented equivalent helper revisions under authority section 4:\n  `Model.printable` now includes `Char.is_digit(c)`, and\n  `Input.recognized` is `is_digit(c) || contains(\"hjklwbeWBE^$fFgG\", c)`.\n  Motivation and preservation argument are in `docs/experiments/navigation-laws.md`.\n  Manifest hashes for `model.bend` and `input.bend` were updated; the recorded\n  declaration count stays 63.\n- `normal_*` input helpers call `NavigationWordsImpl.move_impl` rather than\n  `Words.move`: `PROOF.bend` owns the `Words.move` filler, so the live input\n  module cannot reference that law before proof assembly. Axis, lines and find\n  use their filled APIs directly.\n- The Bun test script now runs `tests/bridge.test.ts` and\n  `tests/navigation.test.ts`; the new file holds the independently worked\n  boundary sequences.\n- Two commits (implementation, then evidence) follow the earlier units'\n  record pattern rather than one combined commit.\n\n## What the next session must know\n\n- `NavigationInputImpl` has flag-parameter dispatch helpers because Bend cannot\n  match a computed Boolean. `step` matches `Input` first so blocked,\n  nonprintable and `Other` return the state unchanged.\n- `NavigationInput.preserves_validity` mirrors the whole Normal dispatch and\n  threads the count bound down to the `f`/`g` prefix branches. Reuse\n  `and_split`-free copying (`+h = evidence`) rather than destructuring a local.\n- The `src/core/navigation.bend` facade imports `PROOF.bend`, exposes\n  `initial`, `step`, `view`, `board`, `position`, `mode`, `contents`, `valid`,\n  dimensions and logical-character constructors. It is not wired into\n  `src/web/main.ts`; the browser still draws the baseline.\n- The facade's JS `Mode` values are tagged objects\n  (`{$:\"Normal\", count:n}`, `FindRight`, `FindLeft`, `Go`). State, Field, Input\n  and View remain opaque in TypeScript.\n- `input_character` treats a non-single-code-point string as `Other`; a single\n  unsupported or non-ASCII glyph still becomes `Character` and Bend rejects it\n  as nonprintable.\n- Input is now the last per-module activation. `ALL.bend` is still not imported,\n  so `just contract-complete` remains pending; `just contract-pending` still\n  describes the full contract as open.\n\n## Open problems\n\nNone for this unit. Browser keyboard integration, pending-command display,\nediting mechanics and the final `ALL.bend` completion are later units.",
+      "session_id": "ses_e8679c72dffeqAEvLwbIDCH5Ci",
+      "cost_usd": 0.10348497,
+      "harness": "opencode",
+      "elapsed_s": 664,
+      "session_s": 654,
+      "verify_s": 8,
+      "test_s": 2,
+      "tokens": {
+        "input": 77355,
+        "output": 39637,
+        "reasoning": 59896,
+        "cache_read": 10720640
+      }
     }
   }
 }
