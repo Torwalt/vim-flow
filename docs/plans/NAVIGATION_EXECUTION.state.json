@@ -155,6 +155,32 @@
         "reasoning": 59896,
         "cache_read": 10720640
       }
+    },
+    "7.1": {
+      "status": "landed",
+      "outcome": "done",
+      "date": "2026-10-26T19:58:00+01:00",
+      "agent": "opencode deepseek/deepseek-flash high",
+      "base": "b5c14671eaa754c56e286c4f6826aa3eced22db6",
+      "commits": [
+        "ac30944eef62ba5d8935e2c5c258bda7e9c7fc92 Render the proved navigation scene in the browser",
+        "b2ce9dad34ccd855c73de468eebb8d462c10e01f Record the playable navigation experiment"
+      ],
+      "attempts": 1,
+      "handover": "# Handover 7.1\n\n## What landed\n\n- `ac30944` connects the proved navigation facade to the browser. `LAWS.bend`\n  imports `./spec/navigation/ALL.bend as Navigation`; Canvas draws the seeded\n  field, a distinct cursor cell and the observed pending mode/count. Keyboard\n  capture preserves `event.key` case, maps Ctrl/Alt/Meta to the blocked flag,\n  and focuses the canvas so handled keys can prevent page scrolling.\n- `ac30944` adds `tests/browser/navigation.spec.ts`, run in both development and\n  production projects. It covers the seed, cursor pixels, `5j`, `Shift+w`,\n  `2fx`, `F`, `gg`, `3G`, pending `f`, Escape, and blocked `Ctrl+j`/\n  `Ctrl+Escape`, plus field preservation.\n- `b2ce9da` records unit 7.1 in `docs/experiments/navigation-laws.md`, updates\n  `docs/direction.md` and `README.md` to the running scene, and removes the\n  completed `vim-movement-laws` workbench topic with `benchpress rm`.\n\n## Landmark drift\n\nNone. All plan landmarks existed as written. The browser tests live in a new\n`tests/browser/navigation.spec.ts`; `baseline.spec.ts` is unchanged.\n\n## Deviations from the work order\n\n- Browser coverage is a new spec file rather than an edit to\n  `baseline.spec.ts`; both run under each Playwright project.\n- `src/web/main.ts` exposes observed position/mode/count/contents as canvas\n  data attributes for test assertions. Pixel checks sample the real canvas;\n  the attributes are not used as a substitute for rendering evidence.\n- `README.md` was updated in addition to the named direction/experiment docs\n  because it described the old baseline as current.\n- Two commits follow the earlier units' implementation-then-evidence pattern.\n\n## What the next session must know\n\n- The plan and authority are intentionally left in place for Ploopy to close.\n  No push or landing was performed.\n- The canvas must own focus for keys to reach Bend; it has `tabindex=\"0\"`,\n  auto-focuses on load and on pointerdown. Browser tests focus it explicitly.\n- Browser pixel helper samples 3px inside a cell (scaled by backing-store size)\n  and relies on the current cursor/field fill colours. A grid or border drawn\n  over cell corners would require changing the helper.\n- The facade imports `PROOF.bend`, so the production page bundles proof\n  assembly (79.7kb navigation chunk). This is the architecture authority\n  prescribes, not accidental duplication.\n- `just verify` does not run `just contract-complete`; run both. The complete\n  contract remains 63 declarations with an unchanged manifest.\n\n## Open problems\n\n- No editing, game objective, arbitrary field loading, scrolling, wrapping,\n  mobile input, timing or IME path is implemented.\n- Blocked modifiers are honoured by Bend but have no separate visible notice.\n- Composition is handled at the boundary but the canvas is not editable, so a\n  real IME interaction is untested.\n- No browser rendering performance measurement was taken; verification is\n  headless Chromium only.",
+      "session_id": "ses_e866fa6c0ffeHWd3dzf1HOReBs",
+      "cost_usd": 0.031410431999999995,
+      "harness": "opencode",
+      "elapsed_s": 216,
+      "session_s": 204,
+      "verify_s": 10,
+      "test_s": 2,
+      "tokens": {
+        "input": 55680,
+        "output": 10245,
+        "reasoning": 15659,
+        "cache_read": 2505344
+      }
     }
   }
 }
