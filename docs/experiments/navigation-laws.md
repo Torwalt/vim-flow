@@ -204,3 +204,34 @@ the same scan and the same rank lemma.
 Checks: the manifest hash for `spec/navigation/find.bend` was updated in the
 implementation commit; the declaration count remains 63. `just proof`
 (kernel `--verdict`), `just verify` and `direnv exec . just test` are green.
+
+## Unit 6.1 contract revision — digit-printable and recognized helpers
+
+The old `Model.printable` was the interval test
+`32 <= Char.to_u32(c) <= 126`. The new formulation is
+`Char.is_digit(c) || (32 <= Char.to_u32(c) <= 126)`. The motivation is a proof
+interface need, not an observed behavior change: the `nonzero_digit` law
+supplies only `Char.is_digit(c)`, while `step` classifies input through
+`Model.printable`, so the implementation needs the implication
+`is_digit -> printable`. The added disjunct makes that immediate. Every digit
+code is 48 through 57, already inside the old interval, so both formulations
+agree for every character. Sanitization, field observation, `field_printable`
+and `contents_printable` are unchanged.
+
+The old `Input.recognized` tested membership in
+`"hjklwbeWBE0^$fFgG123456789"`. The new formulation is
+`Char.is_digit(c) || contains("hjklwbeWBE^$fFgG", c)`. The removed literals are
+exactly the ten digit characters and `Char.is_digit` recognizes exactly those
+codes, so recognized inputs are the same set. This makes
+`is_digit -> recognized` and `recognized = False -> not is_digit` immediate for
+the digit and unsupported laws. Both helpers keep the same names, arity and
+observable meaning; no law, parameter domain or destination changed.
+
+The manifest records the new bytes for `model.bend` and `input.bend`; the
+declaration count remains 63. Checks: `just contract` reports 63 declarations
+matching the manifest, `just proof` (`--verdict`), `just verify` and
+`direnv exec . just test` are green.
+
+| Unit | Commit | Harness/model | Attempts | Checks | Proof issues, representation choices, interventions |
+| --- | --- | --- | --- | --- | --- |
+| 6.1 | `7258008` | OpenCode / `deepseek/deepseek-flash`, high effort | 1 production pass with incremental proof checking | `just proof` (`--verdict`), `just verify`, `direnv exec . just test` green; contract integrity 63 declarations after the documented `model.bend` and `input.bend` hash updates | `State = View` carries the mode and pending count. `step` matches the input first, so nonprintable/blocked/Other states are returned untouched; Normal dispatch is a chain of flag-parameter helper defs because Bend cannot match computed Booleans directly. Movement calls use the filled axis/lines/find APIs; words uses `move_impl` because `PROOF.bend` owns the `Words.move` filler. Facade `src/core/navigation.bend` imports `PROOF.bend`, exposes state observations and a logical-character constructor, and is covered by boundary tests for counts, saturation, literal find targets, case distinction, Escape, blocked modifiers and edge fallbacks. Contract revision: digit-aware `printable` and `recognized` helpers recorded above. |
