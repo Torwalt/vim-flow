@@ -1,8 +1,9 @@
 # vim-flow
 
 A free browser game about reliving fluent Vim use, and an experiment in Bend 2
-and fast AI iteration. Currently a baseline: a Bend-generated glyph field on
-Canvas, with proof checking and a working development toolchain.
+and fast AI iteration. Currently a playable navigation pass: the proved Bend
+model draws a seeded 40x20 field on Canvas, with keyboard navigation, counts,
+pending commands, proof checking and a working development toolchain.
 
 ## Start
 
@@ -34,7 +35,7 @@ Its repository skills live under `.agents/skills/`; refresh them with
 
 ```sh
 just doctor       # tool versions
-just verify       # proofs, TypeScript, bridge test, browser smoke, production build
+just verify       # proofs, TypeScript, runtime tests, browser navigation checks, production build
 just check-nix    # sandboxed proof check and static-site build
 nix build         # static page in result/
 ```
@@ -52,19 +53,22 @@ Screenshots land under `test-results/`. `just preview` serves the production
 bundle at <http://localhost:4173>.
 
 `just proof` runs `bend PROOF.bend --verdict`, including the formalized BendTT
-kernel. The initial law proves that every baseline cell has exactly one glyph
-character. This establishes the proof pipeline; it makes no claim about future
-gameplay, the browser renderer, or code-generation correctness.
+kernel. `just contract-complete` checks that the full navigation contract is
+imported and proved. The proofs cover the model, axis, word, line, find and
+input obligations; they make no claim about the browser renderer or
+code-generation correctness.
 
 ## Layout
 
 - `src/core/scene.bend`: pure Bend scene and exports.
+- `src/core/navigation.bend`, `src/core/navigation.d.bend.ts`: the navigation
+  facade used by the browser and its TypeScript boundary.
+- `spec/navigation/`: the agreed navigation contract.
 - `LAWS.bend`, `PROOF.bend`: agreed properties and their proofs.
-- `src/core/scene.d.bend.ts`: explicit TypeScript declaration of those exports.
-- `src/web/`: Canvas presentation.
+- `src/web/`: Canvas presentation, key capture and pending-state display.
 - `tools/bend-plugin.ts`: loads the official compiler from the pinned package,
   using `BEND_LOADER` supplied by the shell. The source matches the CLI release.
-- `tests/`: runtime bridge and real-browser smoke checks.
+- `tests/`: runtime bridge and real-browser navigation checks.
 - `nix/`: pinned Lean toolchain and a prebuilt BendTT kernel. Proof checks use
   `BENDTT` from the shell rather than compiling into a home-directory cache.
 - `docs/direction.md`: the author's intent and unresolved gameplay questions.

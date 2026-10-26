@@ -235,3 +235,51 @@ matching the manifest, `just proof` (`--verdict`), `just verify` and
 | Unit | Commit | Harness/model | Attempts | Checks | Proof issues, representation choices, interventions |
 | --- | --- | --- | --- | --- | --- |
 | 6.1 | `7258008` | OpenCode / `deepseek/deepseek-flash`, high effort | 1 production pass with incremental proof checking | `just proof` (`--verdict`), `just verify`, `direnv exec . just test` green; contract integrity 63 declarations after the documented `model.bend` and `input.bend` hash updates | `State = View` carries the mode and pending count. `step` matches the input first, so nonprintable/blocked/Other states are returned untouched; Normal dispatch is a chain of flag-parameter helper defs because Bend cannot match computed Booleans directly. Movement calls use the filled axis/lines/find APIs; words uses `move_impl` because `PROOF.bend` owns the `Words.move` filler. Facade `src/core/navigation.bend` imports `PROOF.bend`, exposes state observations and a logical-character constructor, and is covered by boundary tests for counts, saturation, literal find targets, case distinction, Escape, blocked modifiers and edge fallbacks. Contract revision: digit-aware `printable` and `recognized` helpers recorded above. |
+
+## Unit 7.1 — playable browser and complete coverage
+
+`LAWS.bend` now imports `./spec/navigation/ALL.bend as Navigation`, so the
+complete contract is inside the proof entry point. `just contract-complete`
+reports the recorded 63 declarations and `ALL PROOFS CHECK`; the manifest and
+contract sources were not revised in this unit. No editing command, field
+mutation or new game rule was added.
+
+`src/web/main.ts` now imports the proved `src/core/navigation.bend` facade
+instead of the baseline scene. Every draw reads `contents`, `position` and
+`mode` from the observed `View`: the seeded 40x20 text is rendered, the cursor
+cell is filled with a distinct colour without changing the character beneath
+it, and the status line shows the mode and pending count (`NORMAL`, `COUNT n`,
+`FIND RIGHT`, `FIND LEFT`, `GO`). The browser captures `keydown`, preserves
+`event.key` case, maps Ctrl/Alt/Meta to the contract's blocked flag, sends
+Escape and non-single-code-point keys as Escape/Other, ignores composing
+keydowns, and sends the committed character on `compositionend`. Handled keys
+prevent page scrolling while the canvas owns focus; clicking the field focuses
+it. The canvas exposes the observed position, row, column, mode, count and
+contents as data attributes for tests, but the browser tests also sample real
+canvas pixels at the reported cursor cell.
+
+`tests/browser/navigation.spec.ts` runs in both the development and production
+projects. It covers the seeded field, `5j`, `Shift+w`, `2fx`, `F`, `gg`, `3G`,
+pending `f`, Escape, and `Ctrl+j`/`Ctrl+Escape` blocked chords. The cursor tests
+compare the rendered cursor cell colour with the field colour and follow it
+after movement; the sequences additionally check the reported position, pending
+count and preserved 800-cell contents. The baseline load test remains.
+
+Checks: `just contract-complete`, `just verify`, `direnv exec . just test`
+(8 Bun tests) and the 12 development/production Chromium tests are green;
+`benchpress lint` is green after `benchpress rm vim-movement-laws`.
+`docs/direction.md` and `README.md` now describe the running navigation scene,
+and the completed workbench topic was removed.
+
+Limitations: the browser only plays the fixed seeded field; there is no field
+selection, scrolling, wrapping, mobile input, editing, time or game objective.
+Blocked modifiers are passed to Bend and leave state unchanged, but the page
+does not display a separate blocked-input notice. Composition handling exists
+as a boundary rule, but the canvas is not an editable element, so a real IME
+path is untested. The browser bundle includes the proof assembly because the
+facade imports it, producing a 79.7kb navigation chunk; no rendering performance
+measurement was taken. Verification is limited to headless Chromium.
+
+| Unit | Commit | Harness/model | Attempts | Checks | Proof issues, representation choices, interventions |
+| --- | --- | --- | --- | --- | --- |
+| 7.1 | `ac30944` | OpenCode / `deepseek/deepseek-flash`, high effort | 1 production pass; browser suite green on first run | `just contract-complete`, `just proof` (`--verdict`), `just verify`, `direnv exec . just test`, 12 dev/production browser tests and `benchpress lint` green; manifest unchanged at 63 declarations | `LAWS.bend` imports `ALL` as `Navigation`; no contract revision. `src/web/main.ts` observes the facade and draws a filled cursor cell and pending status; TypeScript only maps events, never destinations or grammar. Browser tests sample canvas pixels and use data attributes only alongside that check. Removed the completed workbench topic; updated direction and README to the running result. |

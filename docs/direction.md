@@ -25,18 +25,26 @@ Telescope-like picker. These are possibilities, not implemented rules.
 An alternative is a codebase platformer, traversed through Vim motions. Its
 objectives, failure condition and editing mechanics are unknown.
 
-## Baseline architecture
+## What runs now
 
-- Pure Bend modules own the model and expose functions to JavaScript.
-- Laws and proofs stay in Bend and are checked with `--verdict`.
-- TypeScript renders the model on Canvas. The initial field is a plumbing
-  check, not a chosen game mechanic or visual direction.
+- Pure Bend modules own the model, navigation rules and input grammar, and
+  expose a small facade to JavaScript.
+- Laws and proofs stay in Bend and are checked with `--verdict`; the complete
+  navigation contract is imported by `LAWS.bend` and checked by
+  `just contract-complete`.
+- TypeScript captures keys, reports blocked modifiers, and draws the seeded
+  40x20 field and a distinct cursor on Canvas. The status line shows the
+  observed mode and pending count. The field is still a navigation fixture,
+  not a chosen game mechanic or visual direction.
+- Navigation supports counts, `h/j/k/l`, `w/b/e` and `W/B/E`, `0`, `^`, `$`,
+  `gg`/`G`, `f/F`, Escape and the four parsing states. There is no editing or
+  time yet.
 - Bun serves the page and loads Bend through the pinned official compiler.
 - Nix pins the tools; just provides the common commands.
 
 ## Next discussion
 
-Choose the first playable loop and map the author's actual Vim interactions
-onto it. Decide what textual structures mean in the world, how commands target
-them, and whether time continues during multi-key commands. No gameplay
-implementation is included in this baseline.
+Navigation is playable on the seeded field but the first playable loop is not
+chosen. Map the author's actual Vim interactions onto a game objective: decide
+what textual structures mean in the world, how commands target them, whether
+time continues during multi-key commands, and where editing belongs.
