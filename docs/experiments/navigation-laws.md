@@ -8,8 +8,9 @@ Where does implementation force changes to that contract, and which workflow
 or skill instructions would those failures justify?
 
 The author approved the initial movement laws and requested counts and more
-navigation, without editing. The executor model is deliberately not selected
-yet. There is no implementation run or outcome to report.
+navigation, without editing. At the original handoff the executor model had
+not been selected. The stopped first run and restart revision are recorded
+below; the original setup account is retained as history.
 
 The handoff is docs/plans/NAVIGATION.md, its execution plan, and the frozen
 spec/navigation modules. Their 63 declarations comprise 13 abstract API/type
@@ -75,15 +76,60 @@ initial measurement. Metrics unavailable from the harness stay unavailable.
 
 ## Execution evidence
 
-Not started. Ploopy history/report will supply timing, actual model and cost
-where available. Each unit adds one row and links any detailed findings below.
+Execution started with OpenCode / `deepseek/deepseek-flash` at high effort,
+and the author stopped it during unit 1.1 on 2026-10-26. No navigation
+implementation landed. An implementation session reported a conflict between
+erased equality assumptions and the frozen model laws; its handover is in the
+[archived first-run handover](navigation-law-feasibility/first-run-handover.md).
+
+The independent [feasibility investigation](navigation-law-feasibility.md)
+reproduces that restriction and kernel-checks two alternative formulations on
+a small cell model. This is a specification-interface finding, not a completed
+navigation proof or a controlled result about executor strength. The
+investigation and its probes are stronger-model interventions and count as
+such. Ploopy history/report remain the source for completed session timing
+and cost; no aggregate measurement is asserted here.
 
 | Unit | Commit | Harness/model | Attempts | Checks | Proof issues, representation choices, interventions |
 | --- | --- | --- | --- | --- | --- |
 
+## Restart revision — 2026-10-26
+
+The author approved relaxing proof interfaces and helper restrictions while
+preserving observable behavior and kernel verification, committing the
+investigation, and deleting the stopped worktree to restart from scratch.
+
+All 60 `for -name: {equality}` binders in the six specification modules now
+use ordinary affine proof evidence. No parameter domain, equality body,
+predicate, fixture, runtime API declaration or semantic obligation was removed
+or changed in this repair. The before/after source comparison permits exactly
+those annotation changes. The manifest records the revised bytes; the starting
+contract still has 13 abstract declarations and 50 semantic obligations.
+
+The motivating checker error and successful ordinary-evidence/conditional
+alternatives are preserved in the feasibility probes. The repair changes the
+proof interface, not the intended inside/outside or input behavior. It does
+not constitute an implementation witness for the full model or later units.
+
+Authority section 4 now permits documented signature repairs, equivalent law
+reformulations and shared helpers. Every affected behavioral obligation must
+remain covered; independent examples and kernel verification remain required.
+The audit command is named `--integrity` (`--frozen` remains a compatibility
+alias). A manifest match detects unrecorded edits; it does not establish
+semantic equivalence. The executor may update the manifest with a documented
+contract revision, but may not change the authority or audit tool.
+
+This repair and the investigation/probes are stronger-model authoring work.
+The next run uses a revised handoff and must not be reported as an unchanged
+retry or a zero-intervention comparison. The original handover is archived
+above; the author requested removal of the old worktree and its ignored logs.
+
 ## Workflow and skill findings
 
-No executor evidence yet. Candidate questions for the review: whether abstract
+The stopped first unit exposed an erased-premise obstacle and repeated proof
+experimentation. See the investigation above for evidence and proposed changes;
+the restart revision above implements the approved proof-interface repair.
+Remaining review questions: whether abstract
 type signatures were sufficient; whether direct relational nearest/nth laws
 were tractable; whether smaller proof units would help; whether snapshot
 extensionality avoided storage assumptions; and whether the staged/full-proof

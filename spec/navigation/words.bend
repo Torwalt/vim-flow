@@ -77,7 +77,7 @@ law one:
   for +p: Nat
   for +m: Motion
   for +big: Bool
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   Selected(M.contents(f), p, m, big, move(f, p, m, big, 1n))
 
 law zero:
@@ -94,7 +94,7 @@ law counted:
   for +m: Motion
   for +big: Bool
   for +n: Nat
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   {move(f, p, m, big, 2n+n) == move(f, move(f, p, m, big, 1n), m, big, 1n+n) : Nat}
 
 law bounded:
@@ -103,5 +103,5 @@ law bounded:
   for m: Motion
   for big: Bool
   for n: Nat
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   {M.inside(move(f, p, m, big, n)) == True{} : Bool}

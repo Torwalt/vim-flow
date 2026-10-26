@@ -13,9 +13,9 @@ dev:
 proof:
     bend PROOF.bend --verdict
 
-# Check the frozen navigation specification without claiming it is proved.
+# Check recorded navigation contract integrity without claiming it is proved.
 contract:
-    bun tools/check-navigation-contract.ts --frozen
+    bun tools/check-navigation-contract.ts --integrity
 
 # Check that the unimplemented handoff has no errors beyond its open claims.
 contract-pending:

@@ -14,7 +14,15 @@ do not start it now.
 
 The concrete scope and policies below are engineering choices within that
 authorization, not additional quotations or individually negotiated decisions.
-This authority and the frozen Bend contract are the complete handoff.
+This authority and the Bend contract are the complete handoff.
+
+*Revision settled with the author, 2026-10-26:* After stopping the first
+DeepSeek run, preserve observable behavior and kernel verification, but allow
+evidence-backed revisions to proof interfaces, equivalent law formulations
+and shared helpers. The first handoff's erased equality assumptions were a
+proof-interface obstacle. They are now ordinary affine assumptions. The
+restart includes this stronger-model intervention; it is not an unchanged
+comparison with the first run. No complete model witness has been supplied.
 
 ## 2. Scope and exact behavior
 
@@ -104,19 +112,35 @@ them is not evidence that the contracts are satisfiable or complete.
 
 ## 4. Contract ownership and proof activation
 
-`spec/navigation/ALL.bend` is the entire frozen contract. `manifest.json` fixes
-the bytes of all seven Bend specification modules. Never edit those files,
-their manifest, this authority, or the contract audit tool during execution.
-An implementation/model conflict is evidence for the experiment: stop with a
-specific counterexample or checker limitation. Do not silently narrow the
-domain, change a law, add unsafe code/foreign code, or change a hash.
+`spec/navigation/ALL.bend` is the complete behavioral contract. The required
+behavior and supported domain in section 2 remain fixed. The executor may
+revise proof quantities, API/type signatures, equivalent law formulations,
+helper functions and lemma organization when a concrete checker result or
+implementation need justifies it. Preserve arbitrary-scene construction,
+observation guarantees and every semantic obligation. A signature change must
+not hide invalid inputs by narrowing the agreed domain or remove observations.
+
+For each contract revision, record the old and new formulation, the motivating
+probe/error, why the same behavioral obligation is preserved, and the checks
+run in `docs/experiments/navigation-laws.md`. If laws are split or regrouped,
+map the previous obligations to their replacements. Prove equivalence where
+practical; otherwise give an explicit preservation argument and independent
+behavioral examples. A green proof of a weaker law is not preservation.
+
+`manifest.json` records the current bytes and declaration count of all seven
+modules. Update its hashes/count in the same commit as a documented revision;
+do not remove modules or unresolved obligations from its coverage. The audit
+checks integrity, not semantic equivalence or author approval. Keep this
+authority and the audit tool unchanged during execution. Stop for an actual
+behavior change, contradiction, or unresolved checker limitation after focused
+probes; do not narrow the domain or add unsafe/foreign proof escapes.
 
 At handoff the full contract elaborates and reports exactly 63 open declarations.
 `just contract-pending` verifies that diagnostic, explicitly as an OPEN result.
 The baseline `just proof` remains green and covers only activated obligations.
 This distinction must remain visible in reports.
 
-Each core unit activates its unchanged module by adding an import to root
+Each core unit activates its assigned module by adding an import to root
 `LAWS.bend`, and supplies both its executable declarations and proofs through
 the root `PROOF.bend` import graph. Previously activated modules remain active.
 The cumulative order is model, axis, words, lines, find, input. Modules may
@@ -126,15 +150,19 @@ does with Laws.one_character_per_cell. Runtime definitions belong in src/core;
 proof bodies belong in PROOF.bend or imported proof-only modules.
 
 The final unit imports `./spec/navigation/ALL.bend as Navigation` in LAWS.bend.
-`just contract-complete` checks frozen bytes, that full import, and the complete
+`just contract-complete` checks recorded integrity, that full import, and the complete
 kernel verdict. Passing only selected per-module proofs is not completion.
 Never count an unfinished future law as proved or move it out of the manifest.
 
 Private helper types, storage, algorithms and auxiliary lemmas are executor
-choices. Core executable bodies may use Base and the filled contract APIs, not
-the specification's candidate/rank/selection helpers as a runtime oracle. The
-seed text constant is allowed. Proofs may use all specification predicates.
-This keeps specification work visible without shipping it as the implementation.
+choices. Runtime code and proofs may share specification helpers, including
+classification, sanitization, bounds, coordinates and candidate/rank predicates.
+Helpers are guidance and reusable code, not forbidden machinery. Factor shared
+definitions into pure modules if useful, preserving the proof import graph.
+Record reused specification work as authoring assistance. Keep destination
+behavior independently specified: do not replace an obligation with reflexive
+agreement between an implementation and itself. Independent boundary examples
+remain required even when specification and implementation share helpers.
 
 ## 5. Architecture and runtime boundary
 
@@ -214,4 +242,4 @@ because one might be useful.
 Last unit updates durable experiment findings and the direction document to
 describe what actually runs, removes the completed workbench topic, and leaves
 the plan/authority in place for Ploopy's lifecycle. No push or landing is part
-of this pass. Retain the experiment record and frozen spec after plan closure.
+of this pass. Retain the experiment record and specification after plan closure.

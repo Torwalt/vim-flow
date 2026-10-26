@@ -13,7 +13,10 @@ Read `docs/direction.md` for the author's intent. Gameplay is still to discuss.
   Bend functions. `src/web/` captures input and draws state; it does not decide
   game outcomes. Do not introduce foreign or unsafe code into the proved core.
 - `LAWS.bend` holds the agreed requirements. Do not weaken them to make a proof
-  pass. `PROOF.bend` proves them. Run `just proof` after changing the core.
+  pass. Proof signatures, equivalent law formulations and shared helpers may
+  evolve under the active plan's contract-revision rules; record the evidence
+  and preserve behavior and obligation coverage. `PROOF.bend` proves them.
+  Run `just proof` after changing the core.
 - `src/core/scene.d.bend.ts` describes the JS boundary. Update the declarations
   alongside exports and verify their runtime representation with `just test`.
 - Run `just verify` before finishing changes. Run `just check-nix` after flake

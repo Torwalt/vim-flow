@@ -63,7 +63,7 @@ law exact:
   for +target: Char
   for +right: Bool
   for +n: Nat
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   {selected(M.contents(f), p, target, right, 1n+n,
     move(f, p, target, right, 1n+n)) == True{} : Bool}
 
@@ -73,5 +73,5 @@ law bounded:
   for target: Char
   for right: Bool
   for n: Nat
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   {M.inside(move(f, p, target, right, n)) == True{} : Bool}

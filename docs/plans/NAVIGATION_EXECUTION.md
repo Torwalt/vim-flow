@@ -4,24 +4,33 @@ context: docs/experiments/navigation-laws.md
 test: yes
 ---
 
-# Implement and prove navigation against a frozen observable contract
+# Implement and prove navigation against an observable contract
 
-Status: active task document, written 2026-10-26 against `04e43bf`; not started.
+Status: active task document, revised 2026-10-26 after the stopped first run;
+ready for a fresh run with no navigation implementation landed.
 
 ## Decisions settled with the author (2026-10-26)
 
 Implement navigation and counts without editing. Minimize production code before
-execution. The stronger model authored the full contract; the executor chooses
-private representations and writes implementation and proofs. The author will
-choose the executor model later. The authority holds all shared behavior and
+execution. The stronger model authored the contract and repaired its erased
+equality assumptions after the first run. The executor chooses private
+representations and writes implementation and proofs. The author chooses the
+executor when restarting. The authority holds all shared behavior and
 ownership rules; read it in every unit.
 
-Run under nix develop. Every unit activates only its assigned frozen contract
+Run under nix develop. Every unit activates only its assigned contract
 module in LAWS.bend, leaves earlier ones active, implements its API in src/core,
-proves its obligations through PROOF.bend, and runs just verify. Never edit the
-frozen spec/manifest, authority or audit tool. Record the unit's evidence in
+proves its obligations through PROOF.bend, and runs just verify. Contract proof
+interfaces, equivalent law formulations and shared helpers may evolve under
+authority section 4. Preserve behavior and obligation coverage; document each
+revision and update manifest hashes/count in the same commit. Do not edit the
+authority or audit tool. Record the unit's evidence in
 docs/experiments/navigation-laws.md. No implementation has been supplied in
 src/core for this pass. No change to NEXT.md is authorized.
+
+Declaration counts below describe the starting contract. A documented
+reformulation must retain coverage of every starting obligation and prove all
+replacements and added helper laws; changing a count is not completion.
 
 ## Stage 1 — Runtime observations and arbitrary scenes
 
@@ -34,7 +43,12 @@ spec/navigation/model.bend, then activate that module in LAWS.bend.
 PROOF.bend. The two abstract types are declarations to implement, not axioms.
 Choose private Data types for Field/State; provide field/at/contents,
 pack/view and initial with the prescribed seed. No movement implementation is
-needed here. Keep the existing browser unchanged.
+needed here. Keep the existing browser unchanged. Use ordinary proof evidence
+as in the repaired contract and Bend's Base equality lemmas. The checked small
+probes in docs/experiments/navigation-law-feasibility/ are starting examples,
+not a proof that the full model is already feasible. Do not repeat the stopped
+run's erased-assumption experiments. Shared helpers and signature adjustments
+are permitted under authority section 4.
 
 **Done when:** The model module is imported by root LAWS.bend, its 17
 declarations are filled/proved through the root proof graph, just proof and
@@ -50,7 +64,8 @@ runtime roundtrip/field tests if you expose this boundary to JavaScript now.
 exact arithmetic destinations and bounds for all natural counts.
 
 **Start from:** The model contract and its src/core implementations; activate
-axis.bend in LAWS.bend. Preserve the frozen signatures and law statements.
+axis.bend in LAWS.bend. Preserve the behavioral obligations; adjust proof
+interfaces only under authority section 4.
 Keyboard parsing and browser movement belong to later units.
 
 **Done when:** All six axis declarations are filled/proved, just verify passes,
@@ -60,8 +75,8 @@ and evidence records proof attempts and the chosen arithmetic strategy.
 
 ### 3.1 Implement counted w/b/e and W/B/E with relational proofs
 
-**Goal:** Implement and prove spec/navigation/words.bend without using its
-selection predicates as a runtime destination oracle.
+**Goal:** Implement and prove spec/navigation/words.bend. Specification helpers
+may guide and support the implementation under authority section 4.
 
 **Start from:** Model observations and the private core representation. Activate
 words.bend in LAWS.bend. The one-step law quantifies over competing candidates;

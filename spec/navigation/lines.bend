@@ -42,35 +42,35 @@ law zero_column:
   for f: M.Field
   for +p: Nat
   for n: Nat
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   {move(f, p, ColumnZero{}, n) == M.index(M.row(p), 0n) : Nat}
 
 law row_end:
   for f: M.Field
   for +p: Nat
   for +n: Nat
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   {move(f, p, RowEnd{}, n) == M.index(target_row(p, RowEnd{}, n), 39n) : Nat}
 
 law first_nonblank:
   for +f: M.Field
   for +p: Nat
   for n: Nat
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   IndentSelected(M.contents(f), M.row(p), move(f, p, FirstNonblank{}, n))
 
 law first_row:
   for +f: M.Field
   for +p: Nat
   for +n: Nat
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   IndentSelected(M.contents(f), target_row(p, FirstRow{}, n), move(f, p, FirstRow{}, n))
 
 law last_row:
   for +f: M.Field
   for +p: Nat
   for +n: Nat
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   IndentSelected(M.contents(f), target_row(p, LastRow{}, n), move(f, p, LastRow{}, n))
 
 law bounded:
@@ -78,5 +78,5 @@ law bounded:
   for +p: Nat
   for m: Motion
   for n: Nat
-  for -ok: {M.inside(p) == True{} : Bool}
+  for ok: {M.inside(p) == True{} : Bool}
   {M.inside(move(f, p, m, n)) == True{} : Bool}

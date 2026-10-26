@@ -68,13 +68,13 @@ law respects_view:
 law preserves_field:
   for +s: M.State
   for key: M.Input
-  for -ok: {M.valid(M.view(s)) == True{} : Bool}
+  for ok: {M.valid(M.view(s)) == True{} : Bool}
   {M.board(M.view(step(s, key))) == M.board(M.view(s)) : M.Field}
 
 law preserves_validity:
   for +s: M.State
   for key: M.Input
-  for -ok: {M.valid(M.view(s)) == True{} : Bool}
+  for ok: {M.valid(M.view(s)) == True{} : Bool}
   {M.valid(M.view(step(s, key))) == True{} : Bool}
 
 law other:
@@ -94,14 +94,14 @@ law escape:
   for +f: M.Field
   for +p: Nat
   for m: M.Mode
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -mode: {M.mode_valid(m) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for mode: {M.mode_valid(m) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, m}), M.Escape{False{}})) == M.View{f, p, M.Normal{0n}} : M.View}
 
 law nonprintable:
   for +s: M.State
   for +c: Char
-  for -no: {M.printable(c) == False{} : Bool}
+  for no: {M.printable(c) == False{} : Bool}
   {M.view(step(s, M.Character{c, False{}})) == M.view(s) : M.View}
 
 law axis:
@@ -109,8 +109,8 @@ law axis:
   for +p: Nat
   for +n: Nat
   for +d: A.Direction
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{axis_key(d), False{}})) ==
     M.View{f, A.move(p, d, M.effective(n)), M.Normal{0n}} : M.View}
 
@@ -120,15 +120,15 @@ law words:
   for +n: Nat
   for +m: W.Motion
   for +big: Bool
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{word_key(m, big), False{}})) ==
     M.View{f, W.move(f, p, m, big, M.effective(n)), M.Normal{0n}} : M.View}
 
 law zero_column:
   for +f: M.Field
   for +p: Nat
-  for -pos: {M.inside(p) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{0n}}), M.Character{'0', False{}})) ==
     M.View{f, L.move(f, p, L.ColumnZero{}, 0n), M.Normal{0n}} : M.View}
 
@@ -136,8 +136,8 @@ law first_nonblank:
   for +f: M.Field
   for +p: Nat
   for +n: Nat
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{'^', False{}})) ==
     M.View{f, L.move(f, p, L.FirstNonblank{}, n), M.Normal{0n}} : M.View}
 
@@ -145,8 +145,8 @@ law row_end:
   for +f: M.Field
   for +p: Nat
   for +n: Nat
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{'$', False{}})) ==
     M.View{f, L.move(f, p, L.RowEnd{}, n), M.Normal{0n}} : M.View}
 
@@ -154,8 +154,8 @@ law last_row:
   for +f: M.Field
   for +p: Nat
   for +n: Nat
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{'G', False{}})) ==
     M.View{f, L.move(f, p, L.LastRow{}, n), M.Normal{0n}} : M.View}
 
@@ -163,8 +163,8 @@ law find_right_prefix:
   for +f: M.Field
   for +p: Nat
   for +n: Nat
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{'f', False{}})) ==
     M.View{f, p, M.FindRight{M.effective(n)}} : M.View}
 
@@ -172,8 +172,8 @@ law find_left_prefix:
   for +f: M.Field
   for +p: Nat
   for +n: Nat
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{'F', False{}})) ==
     M.View{f, p, M.FindLeft{M.effective(n)}} : M.View}
 
@@ -183,9 +183,9 @@ law find_target:
   for +n: Nat
   for +right: Bool
   for +c: Char
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Bool.and(Nat.is_gt(n, 0n), Nat.is_le(n, 9999n)) == True{} : Bool}
-  for -char: {M.printable(c) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Bool.and(Nat.is_gt(n, 0n), Nat.is_le(n, 9999n)) == True{} : Bool}
+  for char: {M.printable(c) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, find_mode(right, n)}), M.Character{c, False{}})) ==
     M.View{f, F.move(f, p, c, right, n), M.Normal{0n}} : M.View}
 
@@ -193,8 +193,8 @@ law go_prefix:
   for +f: M.Field
   for +p: Nat
   for +n: Nat
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{'g', False{}})) ==
     M.View{f, p, M.Go{n}} : M.View}
 
@@ -202,8 +202,8 @@ law go_complete:
   for +f: M.Field
   for +p: Nat
   for +n: Nat
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Go{n}}), M.Character{'g', False{}})) ==
     M.View{f, L.move(f, p, L.FirstRow{}, n), M.Normal{0n}} : M.View}
 
@@ -212,10 +212,10 @@ law go_invalid:
   for +p: Nat
   for +n: Nat
   for +c: Char
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
-  for -char: {M.printable(c) == True{} : Bool}
-  for -not_g: {Char.is_eq(c, 'g') == False{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for char: {M.printable(c) == True{} : Bool}
+  for not_g: {Char.is_eq(c, 'g') == False{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Go{n}}), M.Character{c, False{}})) ==
     M.View{f, p, M.Normal{0n}} : M.View}
 
@@ -224,9 +224,9 @@ law nonzero_digit:
   for +p: Nat
   for +n: Nat
   for +c: Char
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
-  for -char: {Bool.and(Char.is_digit(c), Bool.not(Char.is_eq(c, '0'))) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for char: {Bool.and(Char.is_digit(c), Bool.not(Char.is_eq(c, '0'))) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{c, False{}})) ==
     M.View{f, p, M.Normal{append_count(n, digit(c))}} : M.View}
 
@@ -234,8 +234,8 @@ law zero_digit:
   for +f: M.Field
   for +p: Nat
   for +n: Nat
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Bool.and(Nat.is_gt(n, 0n), Nat.is_le(n, 9999n)) == True{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Bool.and(Nat.is_gt(n, 0n), Nat.is_le(n, 9999n)) == True{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{'0', False{}})) ==
     M.View{f, p, M.Normal{append_count(n, 0n)}} : M.View}
 
@@ -244,9 +244,9 @@ law unsupported:
   for +p: Nat
   for +n: Nat
   for +c: Char
-  for -pos: {M.inside(p) == True{} : Bool}
-  for -count: {Nat.is_le(n, 9999n) == True{} : Bool}
-  for -char: {M.printable(c) == True{} : Bool}
-  for -unknown: {recognized(c) == False{} : Bool}
+  for pos: {M.inside(p) == True{} : Bool}
+  for count: {Nat.is_le(n, 9999n) == True{} : Bool}
+  for char: {M.printable(c) == True{} : Bool}
+  for unknown: {recognized(c) == False{} : Bool}
   {M.view(step(M.pack(M.View{f, p, M.Normal{n}}), M.Character{c, False{}})) ==
     M.View{f, p, M.Normal{0n}} : M.View}

@@ -28,6 +28,13 @@ Follow `AGENTS.md` and `docs/direction.md`. Run `nix develop --command just veri
 before finishing changes, and `nix develop --command just check-nix` after flake
 changes. Preserve the configured Git identity and omit AI attribution in commits.
 
+For navigation, the active authority explicitly permits evidence-backed proof
+interface changes, equivalent law formulations and shared helpers. Follow its
+section 4 and record contract revisions with manifest updates; do not treat the
+old byte freeze as binding. Observable behavior and obligation coverage remain
+required. Historical negative feasibility probes intentionally fail and are
+outside the production proof graph.
+
 ## plan-review
 
 ## review-triage

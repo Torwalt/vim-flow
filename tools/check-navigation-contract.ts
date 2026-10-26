@@ -1,9 +1,9 @@
 import { resolve } from "node:path";
 
 const root = resolve(import.meta.dir, "..");
-const mode = process.argv[2] || "--frozen";
-if (!["--frozen", "--pending", "--complete"].includes(mode)) {
-  throw new Error("Use --frozen, --pending, or --complete.");
+const mode = process.argv[2] || "--integrity";
+if (!["--integrity", "--frozen", "--pending", "--complete"].includes(mode)) {
+  throw new Error("Use --integrity, --pending, or --complete (--frozen is a compatibility alias).");
 }
 
 const manifest = await Bun.file(resolve(root, "spec/navigation/manifest.json")).json() as {
@@ -15,11 +15,11 @@ let declarations = 0;
 for (const [path, expected] of Object.entries(manifest.files)) {
   const source = await Bun.file(resolve(root, path)).text();
   const actual = new Bun.CryptoHasher("sha256").update(source).digest("hex");
-  if (actual !== expected) throw new Error(`Frozen navigation contract changed: ${path}`);
+  if (actual !== expected) throw new Error(`Navigation contract differs from its recorded manifest: ${path}`);
   declarations += [...source.matchAll(/^law /gm)].length;
 }
 if (declarations !== manifest.openDeclarations) throw new Error("Contract declaration count changed.");
-console.log(`Frozen navigation contract: ${declarations} declarations intact.`);
+console.log(`Navigation contract integrity: ${declarations} declarations match the recorded manifest.`);
 
 async function bend(args: string[]): Promise<{ status: number; output: string }> {
   const process = Bun.spawn(["bend", ...args], { cwd: root, stdout: "pipe", stderr: "pipe" });

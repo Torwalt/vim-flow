@@ -129,7 +129,7 @@ def seed_text() -> String:
 law field_contents:
   for +text: String
   for +p: Nat
-  for -ok: {inside(p) == True{} : Bool}
+  for ok: {inside(p) == True{} : Bool}
   {at(field(text), p) == text_at(text, p) : Char}
 
 law field_printable:
@@ -140,13 +140,13 @@ law field_printable:
 law field_outside:
   for f: Field
   for +p: Nat
-  for -outside: {inside(p) == False{} : Bool}
+  for outside: {inside(p) == False{} : Bool}
   {at(f, p) == ' ' : Char}
 
 # No empty-domain trick: every valid snapshot has a runtime state.
 law pack_view:
   for +snapshot: View
-  for -ok: {valid(snapshot) == True{} : Bool}
+  for ok: {valid(snapshot) == True{} : Bool}
   {view(pack(snapshot)) == snapshot : View}
 
 law initial_view:
@@ -163,7 +163,7 @@ law contents_length:
 law contents_at:
   for +f: Field
   for +p: Nat
-  for -ok: {inside(p) == True{} : Bool}
+  for ok: {inside(p) == True{} : Bool}
   {text_at(contents(f), p) == at(f, p) : Char}
 
 def all_printable(text: String) -> Bool:
