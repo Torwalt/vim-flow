@@ -25,6 +25,32 @@
         "reasoning": 49939,
         "cache_read": 5703424
       }
+    },
+    "2.1": {
+      "status": "landed",
+      "outcome": "done",
+      "date": "2026-10-26T18:59:59+01:00",
+      "agent": "opencode deepseek/deepseek-flash high",
+      "base": "9ce6a0a7b15a30b157c38d4b46ca56e8c01af2c6",
+      "commits": [
+        "9224d591ff9637adf3817c2039854a15b85c468c Implement and prove counted axis movement",
+        "082bfcace4dbf39e0e5c778073d97f3dcb4316c8 Record axis movement experiment evidence"
+      ],
+      "attempts": 1,
+      "handover": "# Handover 2.1\n\n## What landed\n\n- `9224d59` activates `spec/navigation/axis.bend` in `LAWS.bend`, adds\n  `src/core/navigation_axis.bend`, and proves all six axis declarations through\n  the root proof graph.\n- `082bfca` records the unit's proof strategy and the initial filler rejection\n  in `docs/experiments/navigation-laws.md`.\n\n## Landmark drift\n\nNone. The axis module, model module, `LAWS.bend` and `PROOF.bend` are where the\nplan expects them. No specification or manifest change was needed.\n\n## Deviations from the work order\n\n- The evidence record is a second commit because its table row needs the\n  implementation commit's hash. No behavior is split between them.\n- The law filler `Axis.move` is untyped and delegates once to a private\n  `move_impl(+position, ...)`. Bend rejects a direct filler that reads the law's\n  affine `position` twice (error: `position (consumed more than once)`), so the\n  helper owns the reusable position.\n- The proof adds a private arithmetic layer rather than evaluating large\n  concrete positions: addition lemmas, a `Nat.divmod.go` invariant, quotient\n  and remainder bounds, and monotonicity lemmas for `sub` and `min`. All are\n  proof-only laws in `PROOF.bend`.\n\n## What the next session must know\n\n- Active order in `LAWS.bend` is scene, model, axis. Add the next unit's module\n  import below axis and leave the earlier ones active.\n- Destination formulas are implemented exactly as the contract states:\n  `Model.index` over `Nat.sub`/`Nat.min`. Zero counts therefore act as identity\n  and every edge saturates; no separate default-count code exists in this unit.\n- `row_lt_20` and `col_lt_40` are available in `PROOF.bend` for any inside\n  position. `index_inside` is the general `r \u003c 20`, `c \u003c 40` bound. Word, line\n  and find proofs can reuse `sub_lt`, `min_lt`, `add_mul_lt`, `add_comm`,\n  `add_succ_r`, `add_zero_r`, `div_bound`, and the `divmod_go_*` lemmas.\n- The `divmod_go` invariant uses `a = n + (mul(d,40) + r)` with `r + m = 39`;\n  match the binders' structural order in new proofs or reuse the helpers.\n- `just contract-pending` still reports the expected 63 open declarations;\n  `just contract-complete` still waits for the final `ALL.bend` import.\n- Keyboard parsing, default count handling and browser movement remain later\n  units; the browser is unchanged.\n\n## Open problems\n\nNone for this unit. The proof layer is larger than the implementation because\nBase has no Nat arithmetic lemmas; this is proof organization, not contract\ndrift.",
+      "session_id": "ses_e86a943edffeQXJkCc7dzGCjjK",
+      "cost_usd": 0.06911501999999997,
+      "harness": "opencode",
+      "elapsed_s": 511,
+      "session_s": 506,
+      "verify_s": 5,
+      "test_s": 1,
+      "tokens": {
+        "input": 42366,
+        "output": 16058,
+        "reasoning": 61755,
+        "cache_read": 5357440
+      }
     }
   }
 }
