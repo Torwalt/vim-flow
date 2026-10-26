@@ -1,0 +1,7 @@
+preload = ["./tools/bend-plugin.ts"]
+
+[test]
+preload = ["./tools/bend-plugin.ts"]
+
+[serve.static]
+plugins = ["./tools/bend-plugin.ts"]
