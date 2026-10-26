@@ -5,6 +5,8 @@ import ./spec/navigation/model.bend as NavigationModel
 import ./src/core/navigation_model.bend as NavigationModelImpl
 import ./spec/navigation/axis.bend as NavigationAxis
 import ./src/core/navigation_axis.bend as NavigationAxisImpl
+import ./spec/navigation/words.bend as NavigationWords
+import ./src/core/navigation_words.bend as NavigationWordsImpl
 
 def Laws.one_character_per_cell(value):
   match value:
@@ -718,3 +720,648 @@ def NavigationAxis.bounded(p, direction, n, ok):
       up_inside(p, n, ok)
     case NavigationAxis.Right{}:
       right_inside(p, n, ok)
+
+law and_left:
+  for a: Bool
+  for b: Bool
+  for h: {Bool.and(a,b) == True{} : Bool}
+  {a == True{} : Bool}
+def and_left(a, b, h):
+  match a:
+    case False{}:
+      empty_elim({False{} == True{} : Bool}, absurd_eq(h))
+    case True{}:
+      {==}
+
+law and_right:
+  for a: Bool
+  for b: Bool
+  for h: {Bool.and(a,b) == True{} : Bool}
+  {b == True{} : Bool}
+def and_right(a, b, h):
+  match a:
+    case False{}:
+      empty_elim({b == True{} : Bool}, absurd_eq(h))
+    case True{}:
+      h
+
+law and_intro:
+  for a: Bool
+  for b: Bool
+  for ha: {a == True{} : Bool}
+  for hb: {b == True{} : Bool}
+  {Bool.and(a,b) == True{} : Bool}
+def and_intro(a, b, ha, hb):
+  match a:
+    case False{}:
+      empty_elim({Bool.and(False{},b) == True{} : Bool}, absurd_eq(ha))
+    case True{}:
+      hb
+
+law or_true_r:
+  for b: Bool
+  {Bool.or(b, True{}) == True{} : Bool}
+def or_true_r(b):
+  match b:
+    case False{}:
+      {==}
+    case True{}:
+      {==}
+
+law or_not_min:
+  for c: Bool
+  for r: Bool
+  for hr: {c == True{} : Bool} -> {r == True{} : Bool}
+  {Bool.or(Bool.not(c), r) == True{} : Bool}
+def or_not_min(c, r, hr):
+  match c:
+    case False{}:
+      {==}
+    case True{}:
+      hr({==})
+
+law zero_le:
+  for +b: Nat
+  {Nat.is_le(0n,b) == True{} : Bool}
+def zero_le(b):
+  match b:
+    case 0n:
+      {==}
+    case 1n+q:
+      {==}
+
+law is_eq_refl:
+  for +a: Nat
+  {Nat.is_eq(a,a) == True{} : Bool}
+def is_eq_refl(a):
+  match a:
+    case 0n:
+      {==}
+    case 1n+p:
+      is_eq_refl(p)
+
+law is_eq_eq:
+  for +a: Nat
+  for +b: Nat
+  for h: {Nat.is_eq(a,b) == True{} : Bool}
+  {a == b : Nat}
+def is_eq_eq(a, b, h):
+  match a b:
+    case 0n 0n:
+      {==}
+    case 0n 1n+q:
+      empty_elim({0n == 1n+q : Nat}, absurd_eq(h))
+    case 1n+p 0n:
+      empty_elim({1n+p == 0n : Nat}, absurd_eq(h))
+    case 1n+p 1n+q:
+      Equal.cong(Nat, Nat, (z => 1n+z), p, q, is_eq_eq(p, q, h))
+
+law eq_is_eq:
+  for +a: Nat
+  for +b: Nat
+  for e: {a == b : Nat}
+  {Nat.is_eq(a,b) == True{} : Bool}
+def eq_is_eq(a, b, e):
+  %e : {Nat.is_eq(a, _) == True{} : Bool}
+  is_eq_refl(a)
+
+law not_true_of_contra:
+  for b: Bool
+  for h: {b == True{} : Bool} -> Empty
+  {Bool.not(b) == True{} : Bool}
+def not_true_of_contra(b, h):
+  match b:
+    case False{}:
+      {==}
+    case True{}:
+      empty_elim({Bool.not(True{}) == True{} : Bool}, h({==}))
+
+law is_ne_swap:
+  for +a: Nat
+  for +b: Nat
+  for h: {Nat.is_ne(a,b) == True{} : Bool}
+  {Nat.is_ne(b,a) == True{} : Bool}
+def is_ne_swap(a, b, h):
+  match a b:
+    case 0n 0n:
+      empty_elim({Nat.is_ne(0n,0n) == True{} : Bool}, absurd_eq(h))
+    case 0n 1n+q:
+      {==}
+    case 1n+p 0n:
+      {==}
+    case 1n+p 1n+q:
+      is_ne_swap(p, q, h)
+
+law le_of_lt:
+  for +a: Nat
+  for +b: Nat
+  for h: {Nat.is_lt(a,b) == True{} : Bool}
+  {Nat.is_le(a,b) == True{} : Bool}
+def le_of_lt(a, b, h):
+  match a b:
+    case 0n 0n:
+      empty_elim({Nat.is_le(0n,0n) == True{} : Bool}, absurd_eq(h))
+    case 0n 1n+q:
+      {==}
+    case 1n+p 0n:
+      empty_elim({Nat.is_le(1n+p,0n) == True{} : Bool}, absurd_eq(h))
+    case 1n+p 1n+q:
+      le_of_lt(p, q, h)
+
+law succ_le_of_lt:
+  for +a: Nat
+  for +b: Nat
+  for h: {Nat.is_lt(a,b) == True{} : Bool}
+  {Nat.is_le(Nat.add(a,1n),b) == True{} : Bool}
+def succ_le_of_lt(a, b, h):
+  match a b:
+    case 0n 0n:
+      empty_elim({Nat.is_le(Nat.add(0n,1n),0n) == True{} : Bool}, absurd_eq(h))
+    case 0n 1n+q:
+      zero_le(q)
+    case 1n+p 0n:
+      empty_elim({Nat.is_le(Nat.add(1n+p,1n),0n) == True{} : Bool}, absurd_eq(h))
+    case 1n+p 1n+q:
+      succ_le_of_lt(p, q, h)
+
+law cmp_lt_of_le_ne:
+  for c: Cmp
+  for le: {Cmp.is_le(c) == True{} : Bool}
+  for ne: {Bool.not(Cmp.is_eq(c)) == True{} : Bool}
+  {Cmp.is_lt(c) == True{} : Bool}
+def cmp_lt_of_le_ne(c, le, ne):
+  match c:
+    case LT{}:
+      {==}
+    case EQ{}:
+      empty_elim({Cmp.is_lt(EQ{}) == True{} : Bool}, absurd_eq(ne))
+    case GT{}:
+      empty_elim({Cmp.is_lt(GT{}) == True{} : Bool}, absurd_eq(le))
+
+law lt_of_le_ne:
+  for +a: Nat
+  for +b: Nat
+  for le: {Nat.is_le(a,b) == True{} : Bool}
+  for ne: {Nat.is_ne(a,b) == True{} : Bool}
+  {Nat.is_lt(a,b) == True{} : Bool}
+def lt_of_le_ne(a, b, le, ne):
+  cmp_lt_of_le_ne(Nat.cmp(a,b), le, ne)
+
+law lt_zero:
+  for +a: Nat
+  {Nat.is_lt(a,0n) == False{} : Bool}
+def lt_zero(a):
+  match a:
+    case 0n:
+      {==}
+    case 1n+p:
+      {==}
+
+law le_lt_absurd:
+  for +a: Nat
+  for +b: Nat
+  for le: {Nat.is_le(a,b) == True{} : Bool}
+  for lt: {Nat.is_lt(b,a) == True{} : Bool}
+  {False{} == True{} : Bool}
+def le_lt_absurd(a, b, le, lt):
+  match a b:
+    case 0n 0n:
+      lt
+    case 0n 1n+q:
+      lt
+    case 1n+p 0n:
+      le
+    case 1n+p 1n+q:
+      le_lt_absurd(p, q, le, lt)
+
+law le_pred_of_lt:
+  for +a: Nat
+  for +b: Nat
+  for h: {Nat.is_lt(a, 1n+b) == True{} : Bool}
+  {Nat.is_le(a,b) == True{} : Bool}
+def le_pred_of_lt(a, b, h):
+  match a b:
+    case 0n _:
+      zero_le(b)
+    case 1n+p 0n:
+      empty_elim({Nat.is_le(1n+p,0n) == True{} : Bool},
+        absurd_eq(Equal.trans(Bool, False{}, Nat.is_lt(p,0n), True{},
+          Equal.sym(Bool, Nat.is_lt(p,0n), False{}, lt_zero(p)), h)))
+    case 1n+p 1n+q:
+      le_pred_of_lt(p, q, h)
+
+law le_ge_swap:
+  for +a: Nat
+  for +b: Nat
+  {Nat.is_ge(a,b) == Nat.is_le(b,a) : Bool}
+def le_ge_swap(a, b):
+  match a b:
+    case 0n 0n:
+      {==}
+    case 0n 1n+q:
+      {==}
+    case 1n+p 0n:
+      {==}
+    case 1n+p 1n+q:
+      le_ge_swap(p, q)
+
+law ge_of_le:
+  for +a: Nat
+  for +b: Nat
+  for h: {Nat.is_le(a,b) == True{} : Bool}
+  {Nat.is_ge(b,a) == True{} : Bool}
+def ge_of_le(a, b, h):
+  Equal.trans(Bool, Nat.is_ge(b,a), Nat.is_le(a,b), True{}, le_ge_swap(b,a), h)
+
+law lt_add_zero_r:
+  for +q: Nat
+  for +q0: Nat
+  for h: {Nat.is_lt(q0, Nat.add(q,0n)) == True{} : Bool}
+  {Nat.is_lt(q0, q) == True{} : Bool}
+def lt_add_zero_r(q, q0, h):
+  Equal.trans(Bool, Nat.is_lt(q0,q), Nat.is_lt(q0,Nat.add(q,0n)), True{},
+    Equal.sym(Bool, Nat.is_lt(q0,Nat.add(q,0n)), Nat.is_lt(q0,q),
+      Equal.cong(Nat, Bool, (z => Nat.is_lt(q0,z)), Nat.add(q,0n), q, add_zero_r(q))),
+    h)
+
+law add_one_assoc:
+  for +q: Nat
+  for +k: Nat
+  {Nat.add(q, Nat.add(1n,k)) == Nat.add(Nat.add(q,1n),k) : Nat}
+def add_one_assoc(q, k):
+  match q:
+    case 0n:
+      {==}
+    case 1n+p:
+      Equal.cong(Nat, Nat, (z => 1n+z),
+        Nat.add(p, Nat.add(1n,k)), Nat.add(Nat.add(p,1n),k),
+        add_one_assoc(p, k))
+
+law lt_add_one_assoc:
+  for +q: Nat
+  for +k: Nat
+  for +q0: Nat
+  for h: {Nat.is_lt(q0, Nat.add(q, Nat.add(1n,k))) == True{} : Bool}
+  {Nat.is_lt(q0, Nat.add(Nat.add(q,1n),k)) == True{} : Bool}
+def lt_add_one_assoc(q, k, q0, h):
+  Equal.trans(Bool,
+    Nat.is_lt(q0, Nat.add(Nat.add(q,1n),k)),
+    Nat.is_lt(q0, Nat.add(q, Nat.add(1n,k))), True{},
+    Equal.sym(Bool, Nat.is_lt(q0, Nat.add(q, Nat.add(1n,k))),
+      Nat.is_lt(q0, Nat.add(Nat.add(q,1n),k)),
+      Equal.cong(Nat, Bool, (z => Nat.is_lt(q0, z)),
+        Nat.add(q, Nat.add(1n,k)), Nat.add(Nat.add(q,1n),k),
+        add_one_assoc(q, k))),
+    h)
+
+def candidate_congr(+f: String, +p: Nat, +motion: NavigationWords.Motion, +big: Bool,
+  +a: Nat, +b: Nat, e: {a == b : Nat}) ->
+  {NavigationWords.candidate(f,p,motion,big,a) ==
+    NavigationWords.candidate(f,p,motion,big,b) : Bool}:
+  Equal.cong(Nat, Bool, (z => NavigationWords.candidate(f,p,motion,big,z)), a, b, e)
+
+def candidate_inside(+f: String, +p: Nat, +motion: NavigationWords.Motion, +big: Bool,
+  +q: Nat, h: {NavigationWords.candidate(f,p,motion,big,q) == True{} : Bool}) ->
+  {NavigationModel.inside(q) == True{} : Bool}:
+  match motion:
+    case NavigationWords.Forward{}:
+      and_left(NavigationModel.inside(q), Bool.and(
+        Bool.not(Char.is_eq(NavigationModel.text_at(f,q), ' ')),
+        Bool.or(Nat.is_eq(NavigationModel.column(q),0n),
+          Nat.is_ne(NavigationWords.classify(NavigationModel.text_at(f,Nat.sub(q,1n)),big),
+            NavigationWords.classify(NavigationModel.text_at(f,q),big)))),
+        and_right(Nat.is_gt(q,p), NavigationWords.start(f,big,q), h))
+    case NavigationWords.Backward{}:
+      and_left(NavigationModel.inside(q), Bool.and(
+        Bool.not(Char.is_eq(NavigationModel.text_at(f,q), ' ')),
+        Bool.or(Nat.is_eq(NavigationModel.column(q),0n),
+          Nat.is_ne(NavigationWords.classify(NavigationModel.text_at(f,Nat.sub(q,1n)),big),
+            NavigationWords.classify(NavigationModel.text_at(f,q),big)))),
+        and_right(Nat.is_lt(q,p), NavigationWords.start(f,big,q), h))
+    case NavigationWords.End{}:
+      and_left(NavigationModel.inside(q), Bool.and(
+        Bool.not(Char.is_eq(NavigationModel.text_at(f,q), ' ')),
+        Bool.or(Nat.is_eq(NavigationModel.column(q),39n),
+          Nat.is_ne(NavigationWords.classify(NavigationModel.text_at(f,Nat.add(q,1n)),big),
+            NavigationWords.classify(NavigationModel.text_at(f,q),big)))),
+        and_right(Nat.is_gt(q,p), NavigationWords.finish(f,big,q), h))
+
+def candidates_conflict(+f: String, +p: Nat, +motion: NavigationWords.Motion, +big: Bool,
+  +a: Nat, +b: Nat,
+  hf: {NavigationWords.candidate(f,p,motion,big,a) == False{} : Bool},
+  ht: {NavigationWords.candidate(f,p,motion,big,b) == True{} : Bool},
+  h: {Nat.is_eq(a,b) == True{} : Bool}) -> Empty:
+  absurd_eq(Equal.trans(Bool, False{}, NavigationWords.candidate(f,p,motion,big,a), True{},
+    Equal.sym(Bool, NavigationWords.candidate(f,p,motion,big,a), False{}, hf),
+    Equal.trans(Bool, NavigationWords.candidate(f,p,motion,big,a),
+      NavigationWords.candidate(f,p,motion,big,b), True{},
+      candidate_congr(f,p,motion,big,a,b, is_eq_eq(a,b,h)), ht)))
+
+def ne_of_candidates_conflict(+f: String, +p: Nat, +motion: NavigationWords.Motion, +big: Bool,
+  +a: Nat, +b: Nat,
+  hf: {NavigationWords.candidate(f,p,motion,big,a) == False{} : Bool},
+  ht: {NavigationWords.candidate(f,p,motion,big,b) == True{} : Bool}) ->
+  {Nat.is_ne(a,b) == True{} : Bool}:
+  not_true_of_contra(Nat.is_eq(a,b),
+    (h => candidates_conflict(f,p,motion,big,a,b,hf,ht,h)))
+
+law scan_up_found:
+  for +f: String
+  for +p: Nat
+  for +motion: NavigationWords.Motion
+  for +big: Bool
+  for +fuel: Nat
+  for +q: Nat
+  for +c: Bool
+  for hc: {c == NavigationWords.candidate(f,p,motion,big,q) : Bool}
+  {Bool.or(NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.scan_up(f,p,motion,big,fuel,q,c)),
+    Nat.is_eq(NavigationWordsImpl.scan_up(f,p,motion,big,fuel,q,c),799n)) == True{} : Bool}
+def scan_up_found(f, p, motion, big, fuel, q, c, hc):
+  match fuel:
+    case 0n:
+      or_true_r(NavigationWords.candidate(f,p,motion,big,799n))
+    case 1n+k:
+      match c:
+        case True{}:
+          %hc : {Bool.or(_, Nat.is_eq(q,799n)) == True{} : Bool}
+          {==}
+        case False{}:
+          scan_up_found(f, p, motion, big, k, Nat.add(q,1n),
+            NavigationWords.candidate(f,p,motion,big,Nat.add(q,1n)), {==})
+
+law scan_up_inside:
+  for +f: String
+  for +p: Nat
+  for +motion: NavigationWords.Motion
+  for +big: Bool
+  for +fuel: Nat
+  for +q: Nat
+  for +c: Bool
+  for hc: {c == NavigationWords.candidate(f,p,motion,big,q) : Bool}
+  {NavigationModel.inside(NavigationWordsImpl.scan_up(f,p,motion,big,fuel,q,c)) == True{} : Bool}
+def scan_up_inside(f, p, motion, big, fuel, q, c, hc):
+  match fuel:
+    case 0n:
+      {==}
+    case 1n+k:
+      match c:
+        case True{}:
+          candidate_inside(f,p,motion,big,q,
+            Equal.sym(Bool, True{}, NavigationWords.candidate(f,p,motion,big,q), hc))
+        case False{}:
+          scan_up_inside(f, p, motion, big, k, Nat.add(q,1n),
+            NavigationWords.candidate(f,p,motion,big,Nat.add(q,1n)), {==})
+
+law scan_up_min:
+  for +f: String
+  for +p: Nat
+  for +motion: NavigationWords.Motion
+  for +big: Bool
+  for +fuel: Nat
+  for +q: Nat
+  for +q0: Nat
+  for +c: Bool
+  for hc: {c == NavigationWords.candidate(f,p,motion,big,q) : Bool}
+  for +hq: {NavigationWords.candidate(f,p,motion,big,q0) == True{} : Bool}
+  for +hle: {Nat.is_le(q,q0) == True{} : Bool}
+  for +hlt: {Nat.is_lt(q0, Nat.add(q,fuel)) == True{} : Bool}
+  {Bool.and(
+    NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.scan_up(f,p,motion,big,fuel,q,c)),
+    Nat.is_le(NavigationWordsImpl.scan_up(f,p,motion,big,fuel,q,c),q0)) == True{} : Bool}
+def scan_up_min(f, p, motion, big, fuel, q, q0, c, hc, hq, hle, hlt):
+  match fuel:
+    case 0n:
+      empty_elim({Bool.and(
+        NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.scan_up(f,p,motion,big,0n,q,c)),
+        Nat.is_le(NavigationWordsImpl.scan_up(f,p,motion,big,0n,q,c),q0)) == True{} : Bool},
+        absurd_eq(le_lt_absurd(q, q0, hle, lt_add_zero_r(q, q0, hlt))))
+    case 1n+k:
+      match c:
+        case True{}:
+          and_intro(NavigationWords.candidate(f,p,motion,big,q), Nat.is_le(q,q0),
+            Equal.sym(Bool, True{}, NavigationWords.candidate(f,p,motion,big,q), hc), hle)
+        case False{}:
+          scan_up_min(f, p, motion, big, k, Nat.add(q,1n), q0,
+            NavigationWords.candidate(f,p,motion,big,Nat.add(q,1n)), {==}, hq,
+            succ_le_of_lt(q, q0,
+              lt_of_le_ne(q, q0, hle,
+                ne_of_candidates_conflict(f,p,motion,big,q,q0,
+                  Equal.sym(Bool, False{}, NavigationWords.candidate(f,p,motion,big,q), hc),
+                  hq))),
+            lt_add_one_assoc(q, k, q0, hlt))
+
+law scan_down_found:
+  for +f: String
+  for +p: Nat
+  for +motion: NavigationWords.Motion
+  for +big: Bool
+  for +fuel: Nat
+  for +c: Bool
+  for hc: {c == NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.pred(fuel)) : Bool}
+  {Bool.or(NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.scan_down(f,p,motion,big,fuel,c)),
+    Nat.is_eq(NavigationWordsImpl.scan_down(f,p,motion,big,fuel,c),0n)) == True{} : Bool}
+def scan_down_found(f, p, motion, big, fuel, c, hc):
+  match fuel:
+    case 0n:
+      or_true_r(NavigationWords.candidate(f,p,motion,big,0n))
+    case 1n++k:
+      match c:
+        case True{}:
+          %hc : {Bool.or(_, Nat.is_eq(k,0n)) == True{} : Bool}
+          {==}
+        case False{}:
+          scan_down_found(f, p, motion, big, k,
+            NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.pred(k)), {==})
+
+law scan_down_inside:
+  for +f: String
+  for +p: Nat
+  for +motion: NavigationWords.Motion
+  for +big: Bool
+  for +fuel: Nat
+  for +c: Bool
+  for hc: {c == NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.pred(fuel)) : Bool}
+  {NavigationModel.inside(NavigationWordsImpl.scan_down(f,p,motion,big,fuel,c)) == True{} : Bool}
+def scan_down_inside(f, p, motion, big, fuel, c, hc):
+  match fuel:
+    case 0n:
+      {==}
+    case 1n++k:
+      match c:
+        case True{}:
+          candidate_inside(f,p,motion,big,k,
+            Equal.sym(Bool, True{}, NavigationWords.candidate(f,p,motion,big,k), hc))
+        case False{}:
+          scan_down_inside(f, p, motion, big, k,
+            NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.pred(k)), {==})
+
+law scan_down_min:
+  for +f: String
+  for +p: Nat
+  for +motion: NavigationWords.Motion
+  for +big: Bool
+  for +fuel: Nat
+  for +q0: Nat
+  for +c: Bool
+  for hc: {c == NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.pred(fuel)) : Bool}
+  for +hq: {NavigationWords.candidate(f,p,motion,big,q0) == True{} : Bool}
+  for +hlt: {Nat.is_lt(q0, fuel) == True{} : Bool}
+  {Bool.and(
+    NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.scan_down(f,p,motion,big,fuel,c)),
+    Nat.is_ge(NavigationWordsImpl.scan_down(f,p,motion,big,fuel,c),q0)) == True{} : Bool}
+def scan_down_min(f, p, motion, big, fuel, q0, c, hc, hq, hlt):
+  match fuel:
+    case 0n:
+      empty_elim({Bool.and(
+        NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.scan_down(f,p,motion,big,0n,c)),
+        Nat.is_ge(NavigationWordsImpl.scan_down(f,p,motion,big,0n,c),q0)) == True{} : Bool},
+        absurd_eq(Equal.trans(Bool, False{}, Nat.is_lt(q0,0n), True{},
+          Equal.sym(Bool, Nat.is_lt(q0,0n), False{}, lt_zero(q0)), hlt)))
+    case 1n++k:
+      match c:
+        case True{}:
+          and_intro(NavigationWords.candidate(f,p,motion,big,k), Nat.is_ge(k,q0),
+            Equal.sym(Bool, True{}, NavigationWords.candidate(f,p,motion,big,k), hc),
+            ge_of_le(q0, k, le_pred_of_lt(q0, k, hlt)))
+        case False{}:
+          scan_down_min(f, p, motion, big, k, q0,
+            NavigationWords.candidate(f,p,motion,big,NavigationWordsImpl.pred(k)), {==}, hq,
+            lt_of_le_ne(q0, k, le_pred_of_lt(q0, k, hlt),
+              is_ne_swap(k, q0,
+                ne_of_candidates_conflict(f,p,motion,big,k,q0,
+                  Equal.sym(Bool, False{}, NavigationWords.candidate(f,p,motion,big,k), hc),
+                  hq))))
+
+def selected_up_first(+f: String, +p: Nat, +motion: NavigationWords.Motion, +big: Bool) ->
+  {Bool.and(
+    NavigationModel.inside(NavigationWordsImpl.scan_up(f,p,motion,big,800n,0n,
+      NavigationWords.candidate(f,p,motion,big,0n))),
+    Bool.or(NavigationWords.candidate(f,p,motion,big,
+      NavigationWordsImpl.scan_up(f,p,motion,big,800n,0n,NavigationWords.candidate(f,p,motion,big,0n))),
+      Nat.is_eq(NavigationWordsImpl.scan_up(f,p,motion,big,800n,0n,
+        NavigationWords.candidate(f,p,motion,big,0n)),799n))) == True{} : Bool}:
+  and_intro(
+    NavigationModel.inside(NavigationWordsImpl.scan_up(f,p,motion,big,800n,0n,
+      NavigationWords.candidate(f,p,motion,big,0n))),
+    Bool.or(NavigationWords.candidate(f,p,motion,big,
+      NavigationWordsImpl.scan_up(f,p,motion,big,800n,0n,NavigationWords.candidate(f,p,motion,big,0n))),
+      Nat.is_eq(NavigationWordsImpl.scan_up(f,p,motion,big,800n,0n,
+        NavigationWords.candidate(f,p,motion,big,0n)),799n)),
+    scan_up_inside(f,p,motion,big,800n,0n,NavigationWords.candidate(f,p,motion,big,0n),{==}),
+    scan_up_found(f,p,motion,big,800n,0n,NavigationWords.candidate(f,p,motion,big,0n),{==}))
+
+def selected_up_second(+f: String, +p: Nat, +motion: NavigationWords.Motion,
+  +big: Bool, +q0: Nat) ->
+  {Bool.or(Bool.not(NavigationWords.candidate(f,p,motion,big,q0)),
+    Bool.and(NavigationWords.candidate(f,p,motion,big,
+      NavigationWordsImpl.scan_up(f,p,motion,big,800n,0n,NavigationWords.candidate(f,p,motion,big,0n))),
+      Nat.is_le(NavigationWordsImpl.scan_up(f,p,motion,big,800n,0n,
+        NavigationWords.candidate(f,p,motion,big,0n)),q0))) == True{} : Bool}:
+  or_not_min(NavigationWords.candidate(f,p,motion,big,q0),
+    Bool.and(NavigationWords.candidate(f,p,motion,big,
+      NavigationWordsImpl.scan_up(f,p,motion,big,800n,0n,NavigationWords.candidate(f,p,motion,big,0n))),
+      Nat.is_le(NavigationWordsImpl.scan_up(f,p,motion,big,800n,0n,
+        NavigationWords.candidate(f,p,motion,big,0n)),q0)),
+    (+hq => scan_up_min(f,p,motion,big,800n,0n,q0,
+      NavigationWords.candidate(f,p,motion,big,0n),{==},hq,zero_le(q0),
+      candidate_inside(f,p,motion,big,q0,hq))))
+
+def selected_down_first(+f: String, +p: Nat, +big: Bool) ->
+  {Bool.and(
+    NavigationModel.inside(NavigationWordsImpl.scan_down(f,p,NavigationWords.Backward{},big,800n,
+      NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n))),
+    Bool.or(NavigationWords.candidate(f,p,NavigationWords.Backward{},big,
+      NavigationWordsImpl.scan_down(f,p,NavigationWords.Backward{},big,800n,
+        NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n))),
+      Nat.is_eq(NavigationWordsImpl.scan_down(f,p,NavigationWords.Backward{},big,800n,
+        NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n)),0n))) == True{} : Bool}:
+  and_intro(
+    NavigationModel.inside(NavigationWordsImpl.scan_down(f,p,NavigationWords.Backward{},big,800n,
+      NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n))),
+    Bool.or(NavigationWords.candidate(f,p,NavigationWords.Backward{},big,
+      NavigationWordsImpl.scan_down(f,p,NavigationWords.Backward{},big,800n,
+        NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n))),
+      Nat.is_eq(NavigationWordsImpl.scan_down(f,p,NavigationWords.Backward{},big,800n,
+        NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n)),0n)),
+    scan_down_inside(f,p,NavigationWords.Backward{},big,800n,
+      NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n),{==}),
+    scan_down_found(f,p,NavigationWords.Backward{},big,800n,
+      NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n),{==}))
+
+def selected_down_second(+f: String, +p: Nat, +big: Bool, +q0: Nat) ->
+  {Bool.or(Bool.not(NavigationWords.candidate(f,p,NavigationWords.Backward{},big,q0)),
+    Bool.and(NavigationWords.candidate(f,p,NavigationWords.Backward{},big,
+      NavigationWordsImpl.scan_down(f,p,NavigationWords.Backward{},big,800n,
+        NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n))),
+      Nat.is_ge(NavigationWordsImpl.scan_down(f,p,NavigationWords.Backward{},big,800n,
+        NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n)),q0))) == True{} : Bool}:
+  or_not_min(NavigationWords.candidate(f,p,NavigationWords.Backward{},big,q0),
+    Bool.and(NavigationWords.candidate(f,p,NavigationWords.Backward{},big,
+      NavigationWordsImpl.scan_down(f,p,NavigationWords.Backward{},big,800n,
+        NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n))),
+      Nat.is_ge(NavigationWordsImpl.scan_down(f,p,NavigationWords.Backward{},big,800n,
+        NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n)),q0)),
+    (+hq => scan_down_min(f,p,NavigationWords.Backward{},big,800n,q0,
+      NavigationWords.candidate(f,p,NavigationWords.Backward{},big,799n),{==},hq,
+      candidate_inside(f,p,NavigationWords.Backward{},big,q0,hq))))
+
+def NavigationWords.move(f, p, motion, big, count):
+  NavigationWordsImpl.move_impl(count, f, p, motion, big)
+
+def NavigationWords.one(f, p, motion, big, ok):
+  match motion:
+    case NavigationWords.Forward{}:
+      ( selected_up_first(NavigationModel.contents(f),p,NavigationWords.Forward{},big),
+        (q0 => selected_up_second(NavigationModel.contents(f),p,NavigationWords.Forward{},big,q0)) )
+    case NavigationWords.Backward{}:
+      ( selected_down_first(NavigationModel.contents(f),p,big),
+        (q0 => selected_down_second(NavigationModel.contents(f),p,big,q0)) )
+    case NavigationWords.End{}:
+      ( selected_up_first(NavigationModel.contents(f),p,NavigationWords.End{},big),
+        (q0 => selected_up_second(NavigationModel.contents(f),p,NavigationWords.End{},big,q0)) )
+
+def NavigationWords.zero(f, p, motion, big):
+  {==}
+
+def NavigationWords.counted(f, p, motion, big, n, ok):
+  {==}
+
+law step_inside:
+  for +field: NavigationModel.Field
+  for +p: Nat
+  for motion: NavigationWords.Motion
+  for +big: Bool
+  {NavigationModel.inside(NavigationWordsImpl.step(field,p,motion,big)) == True{} : Bool}
+def step_inside(field, p, motion, big):
+  match motion:
+    case NavigationWords.Forward{}:
+      scan_up_inside(NavigationModelImpl.norm(800n, field), p, NavigationWords.Forward{}, big,
+        800n, 0n, NavigationWords.candidate(NavigationModelImpl.norm(800n, field), p,
+          NavigationWords.Forward{}, big, 0n), {==})
+    case NavigationWords.Backward{}:
+      scan_down_inside(NavigationModelImpl.norm(800n, field), p, NavigationWords.Backward{}, big,
+        800n, NavigationWords.candidate(NavigationModelImpl.norm(800n, field), p,
+          NavigationWords.Backward{}, big, 799n), {==})
+    case NavigationWords.End{}:
+      scan_up_inside(NavigationModelImpl.norm(800n, field), p, NavigationWords.End{}, big,
+        800n, 0n, NavigationWords.candidate(NavigationModelImpl.norm(800n, field), p,
+          NavigationWords.End{}, big, 0n), {==})
+
+law move_inside:
+  for +n: Nat
+  for +field: NavigationModel.Field
+  for +p: Nat
+  for +motion: NavigationWords.Motion
+  for +big: Bool
+  for ok: {NavigationModel.inside(p) == True{} : Bool}
+  {NavigationModel.inside(NavigationWordsImpl.move_impl(n, field, p, motion, big)) == True{} : Bool}
+def move_inside(n, field, p, motion, big, ok):
+  match n:
+    case 0n:
+      ok
+    case 1n+k:
+      move_inside(k, field, NavigationWordsImpl.step(field,p,motion,big), motion, big,
+        step_inside(field,p,motion,big))
+
+def NavigationWords.bounded(f, p, motion, big, n, ok):
+  move_inside(n, f, p, motion, big, ok)
