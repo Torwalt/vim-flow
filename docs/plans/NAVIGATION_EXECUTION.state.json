@@ -51,6 +51,32 @@
         "reasoning": 61755,
         "cache_read": 5357440
       }
+    },
+    "3.1": {
+      "status": "landed",
+      "outcome": "done",
+      "date": "2026-10-26T19:09:47+01:00",
+      "agent": "opencode deepseek/deepseek-flash high",
+      "base": "1802676c78b7845942a8671172306b57b8776cfe",
+      "commits": [
+        "915d9a6726b3754001d4add48e9c4dd4fe64ae36 Implement and prove counted word movement",
+        "c7b723edd27b13ce2240240bc1bda1f64f4f834c Record word movement experiment evidence"
+      ],
+      "attempts": 1,
+      "handover": "# Handover 3.1\n\n## What landed\n\n- `915d9a6` activates `spec/navigation/words.bend` in `LAWS.bend`, adds\n  `src/core/navigation_words.bend`, and proves all five word declarations\n  through the root proof graph.\n- `c7b723e` records the unit's evidence in `docs/experiments/navigation-laws.md`,\n  separating candidate/minimality proofs from count decomposition/induction.\n\n## Landmark drift\n\nNone. The words module, model observations, `LAWS.bend` and `PROOF.bend` are\nwhere the plan expects them. No specification, authority or manifest change.\n\n## Deviations from the work order\n\n- The evidence record is a second commit because its table row needs the\n  implementation commit's hash. No behavior is split between them.\n- The implementation scans all 800 cells rather than only the interval after or\n  before the cursor. Forward/end scan upward from 0 and backward scans downward\n  from 799; the candidate predicate already enforces the strict side, so the\n  first hit is the nearest candidate and the full scan stays within fuel.\n- `scan_up`/`scan_down` carry the candidate flag as a parameter. Bend rejects\n  matching a computed value, so each recursion passes the next\n  `NavigationWords.candidate(...)` result explicitly.\n- `NavigationWordsImpl.step` reads field text through the model implementation's\n  `norm(800, field)` so the implementation module does not call the open\n  `Model.contents` law when checked alone.\n- Proofs add a Nat comparison-reflection layer (`is_eq_eq`, `le_of_lt`,\n  `succ_le_of_lt`, `le_pred_of_lt`, `le_ge_swap`, and helpers) because Base has\n  no such lemmas. All are proof-only laws in `PROOF.bend`.\n\n## What the next session must know\n\n- Active order in `LAWS.bend` is scene, model, axis, words. Add the line module\n  import below words and leave the earlier ones active.\n- `NavigationWords.move` fills the law by delegating to\n  `NavigationWordsImpl.move_impl(count, field, p, motion, big)`. Count is first\n  so Bend accepts structural recursion; zero returns the original position.\n- `counted` is definitional. `bounded` is proved via `move_inside`, a generalized\n  induction over the count that takes the field unrestricted.\n- `one` is proved motion by motion. Forward/end use `selected_up_*` and\n  `scan_up_min` with `is_le`; backward uses `selected_down_*` and\n  `scan_down_min` with `is_ge`. Edge fallbacks are 799 and 0.\n- `candidate_inside` supplies the inside bound from any true candidate; the\n  scan lemmas already prove fallback cells are inside.\n- `just contract` still reports 63 declarations matching the manifest;\n  `just contract-complete` still waits for the final `ALL.bend` import.\n- Proof names added are unique against the existing `PROOF.bend` helpers.\n  `add_zero_r` is reused; do not redefine it.\n\n## Open problems\n\nNone for this unit. Browser, keyboard parsing and default count handling remain\nlater units; the browser is unchanged.",
+      "session_id": "ses_e86a174bbffeWfHnKY9v8gk87U",
+      "cost_usd": 0.08058345599999997,
+      "harness": "opencode",
+      "elapsed_s": 588,
+      "session_s": 582,
+      "verify_s": 5,
+      "test_s": 1,
+      "tokens": {
+        "input": 53220,
+        "output": 22776,
+        "reasoning": 65483,
+        "cache_read": 6548352
+      }
     }
   }
 }
