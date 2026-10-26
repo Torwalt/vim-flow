@@ -1,0 +1,30 @@
+{
+  "units": {
+    "1.1": {
+      "status": "landed",
+      "outcome": "done",
+      "date": "2026-10-26T18:51:28+01:00",
+      "agent": "opencode deepseek/deepseek-flash high",
+      "base": "0e17f02c8db13dabdca3e8db49109d7d72df0121",
+      "commits": [
+        "3f56459b77c45c22ae3a8c83ddfc1b7dd15d819a Implement and prove the observable navigation model",
+        "7d58498076605292147818072bcb8dde8549853e Record the observable model experiment evidence"
+      ],
+      "attempts": 1,
+      "handover": "# Handover 1.1\n\n## What landed\n\n- `3f56459` implements the observable model in `src/core/navigation_model.bend`,\n  proves all 17 model declarations through the root proof graph, and activates\n  `spec/navigation/model.bend` in `LAWS.bend`.\n- `7d58498` records the representation choices and checks in\n  `docs/experiments/navigation-laws.md`.\n\n## Landmark drift\n\nNone for the unit's start points. `LAWS.bend`, `PROOF.bend`,\n`src/core/scene.bend`, `scene.d.bend.ts` and the specification are where the\nplan expects them. The stale activation comment in `LAWS.bend` was updated to\nsay the model module is now active.\n\n## Deviations from the work order\n\n- The experiment record is a second commit because its unit row needs the first\n  commit's hash. No behavior is split across the commits.\n- `Field` is the existing `String` representation, not a new wrapper type:\n  `field` is identity, `at` clamps through `inside`, and `contents` pads and\n  sanitizes to 800 cells. `State` is `View`, with `view` and `pack` identities.\n- No JavaScript boundary was exposed, so no new runtime roundtrip test was\n  added. The existing bridge test and browser checks remain green.\n- `contents_at` needed a proof helper with a reusable `+ok` premise because the\n  law's affine equality evidence is used both to rewrite the clamped lookup and\n  to supply the padding bound. This is proof organization only; the spec module\n  and manifest are unchanged.\n\n## What the next session must know\n\n- Model implementations and law fillers are in `src/core/navigation_model.bend`;\n  proof helper laws and all semantic model proofs are in `PROOF.bend`.\n- Active order in `LAWS.bend` is baseline scene, then `NavigationModel`. Add the\n  next unit's module import below the model, leaving both active.\n- `NavigationModel.contents(f)` is `norm(800n, f)`: a sanitized 800-cell string\n  built from `NavigationModel.text_at`. `at` is only clamped for positions\n  outside the field; inside it reads the raw `String` field through `text_at`.\n- `NavigationModel.initial()` is exactly the prescribed seed view with cursor\n  zero and `Normal{0n}`.\n- `just contract-pending` still reports the full frozen contract's 63 open\n  declarations, as expected; `just contract-complete` still requires the final\n  `ALL.bend` import and is not part of this unit.\n- The kernel proof uses the new proof-only helper laws (`norm_length`,\n  `norm_printable`, `norm_prefix`, `printable_text_at`, `all_printable_cons`,\n  `sanitize_idem`) and a small false-equality elimination helper for impossible\n  zero-fuel cases. Keep them proof-only.\n\n## Open problems\n\nNone for this unit. The browser is deliberately unchanged and the model is not\nyet exposed to TypeScript.",
+      "session_id": "ses_e86b0f455ffeUDv8j2nJeYhvft",
+      "cost_usd": 0.06752152200000004,
+      "harness": "opencode",
+      "elapsed_s": 504,
+      "session_s": 499,
+      "verify_s": 5,
+      "test_s": 1,
+      "tokens": {
+        "input": 62403,
+        "output": 18479,
+        "reasoning": 49939,
+        "cache_read": 5703424
+      }
+    }
+  }
+}
