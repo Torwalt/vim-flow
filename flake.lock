@@ -195,11 +195,11 @@
         "nixpkgs-opencode": "nixpkgs-opencode"
       },
       "locked": {
-        "lastModified": 1793033214,
-        "narHash": "sha256-DGcIzBF7b3M45SDB0ps5J3gEr96TGigyAa0BlVtaGF8=",
+        "lastModified": 1793035360,
+        "narHash": "sha256-t1RP1wdpOEnW/BL0zIJ9uo11BIxmpTp0cv9kBhr7ZI0=",
         "owner": "Torwalt",
         "repo": "ploopy",
-        "rev": "87d570dbe1c0076aaa64439d8b9535eddd29404b",
+        "rev": "55d1b86c22fbc90614962f73e335724abe478de4",
         "type": "github"
       },
       "original": {
