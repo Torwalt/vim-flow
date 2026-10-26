@@ -1,0 +1,12 @@
+{
+  "openDeclarations": 63,
+  "files": {
+    "spec/navigation/ALL.bend": "114935f828775ab67b011401b0b87427e5a22c600befc6bda4e663434af49273",
+    "spec/navigation/axis.bend": "a000095daaf1d5a48deda5a5a40e87d702897dd6b7e0ec7db789ac3060209d25",
+    "spec/navigation/find.bend": "7f53ba0695beb9de5c8e118139ac2df64959283c1a06ad5cb55ba86a0cf05460",
+    "spec/navigation/input.bend": "97ba20715fbc34ac3b7635991caae6e204d0f221376c306b57b3c6e81717dc6e",
+    "spec/navigation/lines.bend": "59d51f3e5a9020a80dcf5a184ab5d03d41ac2eab043e38ea03189688b76c0a07",
+    "spec/navigation/model.bend": "d2c8b23fbaac4ea937d954fa9b12b19f9a69e36892d8e83c9289f1cd76775f22",
+    "spec/navigation/words.bend": "3ea44f37c0992c25d9ed0bf9c43f92a9be4dcccc4dfc75bcc369a2852f2fd2cc"
+  }
+}

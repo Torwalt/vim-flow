@@ -1,0 +1,11 @@
+plans = "docs/plans"
+setup = "nix develop --command just setup"
+verify = "nix develop --command just verify"
+test = "nix develop --command just test"
+
+[run]
+push = false
+secondary = "none"
+
+[automation]
+rescue = "none"
