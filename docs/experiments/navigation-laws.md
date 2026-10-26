@@ -94,6 +94,7 @@ and cost; no aggregate measurement is asserted here.
 | --- | --- | --- | --- | --- | --- |
 | 1.1 | `3f56459` | OpenCode / `deepseek/deepseek-flash`, high effort | 1 in the restarted run | `just proof`, `just verify`, `direnv exec . just test` green; contract integrity still 63 declarations, manifest unchanged | Chose `Field = String` and `State = View`. `field` is identity, `at` is an inside-clamped `text_at`, `contents` is an 800-cell sanitized padding built from `text_at`, `view`/`pack` are identity, and `initial` is the prescribed seed. Abstract `Data` laws fill as argument-less defs (`def Model.Field(): String`); typed API laws fill as untyped-name defs. The affine `ok` premise in `contents_at` had to be forwarded once to a proof helper with a reusable `+ok` premise so the same evidence could both rewrite the clamped lookup and supply the padding bound. Added proof-only helper laws for padding length, printability and prefix agreement; no contract revision or manifest change. |
 | 2.1 | `9224d59` | OpenCode / `deepseek/deepseek-flash`, high effort | 1 production pass after isolated probe proofs of the arithmetic helpers | `just proof`, `just verify`, `direnv exec . just test` green; contract integrity still 63 declarations, manifest unchanged | `move` is a private `move_impl` with a reusable position because each direction reads the position twice; the untyped law filler passes it once. Destinations are `Model.index` over `Nat.sub`/`Nat.min`, so zero counts are identity and every edge saturates. Bounds use a `Nat.divmod.go` invariant (`a = n + 40d + r`), quotient/remainder lemmas and induction over `Nat.add`, `sub` and `min`. The first direct filler was rejected for consuming the law's affine `position` twice; no contract or manifest revision. |
+| 3.1 | `915d9a6` | OpenCode / `deepseek/deepseek-flash`, high effort | 1 production pass after an isolated probe of the scan and Nat-reflection helpers | `just proof`, `just verify`, `direnv exec . just test` green; contract integrity still 63 declarations, manifest unchanged | Words scan from position 0 upward (`w`/`e`) or from 799 downward (`b`) with 800-cell fuel, carried candidate flags and edge fallbacks 799/0. Bend rejects matching a computed `candidate(...)`, so the scanner takes the flag as a parameter and recurses with the next computed flag. Candidate/minimality is proved by scan-window lemmas (`scan_up_min`, `scan_down_min`) using Nat comparison reflection; count decomposition is definitional (`counted`) and bounded is proved by induction over the count in `move_inside`. No specification, authority or manifest revision. |
 
 ## Restart revision — 2026-10-26
 
@@ -125,6 +126,14 @@ This repair and the investigation/probes are stronger-model authoring work.
 The next run uses a revised handoff and must not be reported as an unchanged
 retry or a zero-intervention comparison. The original handover is archived
 above; the author requested removal of the old worktree and its ignored logs.
+
+For unit 3.1, the candidate/minimality work is the forward/backward scan proof:
+the selected position is shown to be a real candidate and at least as near as
+every other candidate, with independent edge fallbacks. Count handling is kept
+separate: `counted` is the one-step decomposition of the recursive move, and
+`bounded` is a structural induction over that same count. The proof uses the
+candidate predicate only through its flag and public classification helpers; it
+does not evaluate a concrete fixture or replace the universal law with examples.
 
 ## Workflow and skill findings
 
