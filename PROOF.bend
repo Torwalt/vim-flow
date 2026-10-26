@@ -8,7 +8,9 @@ import ./src/core/navigation_axis.bend as NavigationAxisImpl
 import ./spec/navigation/words.bend as NavigationWords
 import ./src/core/navigation_words.bend as NavigationWordsImpl
 import ./spec/navigation/lines.bend as NavigationLines
+import ./spec/navigation/find.bend as NavigationFind
 import ./src/core/navigation_lines.bend as NavigationLinesImpl
+import ./src/core/navigation_find.bend as NavigationFindImpl
 
 def Laws.one_character_per_cell(value):
   match value:
@@ -1569,3 +1571,815 @@ def line_bounded(+f: NavigationModel.Field, +p: Nat, motion: NavigationLines.Mot
 
 def NavigationLines.bounded(f, p, motion, n, ok):
   line_bounded(f, p, motion, n, ok)
+
+law le_add_mono:
+  for +c: Nat
+  for +a: Nat
+  for +b: Nat
+  for h: {Nat.is_le(a,b) == True{} : Bool}
+  {Nat.is_le(Nat.add(c,a), Nat.add(c,b)) == True{} : Bool}
+
+def le_add_mono(c, a, b, h):
+  match c:
+    case 0n:
+      h
+    case 1n+k:
+      le_add_mono(k, a, b, h)
+
+law lt_add_mono:
+  for +c: Nat
+  for +a: Nat
+  for +b: Nat
+  for h: {Nat.is_lt(a,b) == True{} : Bool}
+  {Nat.is_lt(Nat.add(c,a), Nat.add(c,b)) == True{} : Bool}
+
+def lt_add_mono(c, a, b, h):
+  match c:
+    case 0n:
+      h
+    case 1n+k:
+      lt_add_mono(k, a, b, h)
+
+def lt_of_lt_le(a: Nat, b: Nat, c: Nat,
+  hab: {Nat.is_lt(a,b) == True{} : Bool},
+  hbc: {Nat.is_le(b,c) == True{} : Bool}) -> {Nat.is_lt(a,c) == True{} : Bool}:
+  match a b c:
+    case a 0n c:
+      empty_elim({Nat.is_lt(a,c) == True{} : Bool}, false_elim(a, hab))
+    case a 1n+pb 0n:
+      empty_elim({Nat.is_lt(a,0n) == True{} : Bool}, false_elim(1n+pb, hbc))
+    case 0n 1n+pb 1n+pc:
+      {==}
+    case 1n+pa 1n+pb 1n+pc:
+      lt_of_lt_le(pa, pb, pc, hab, hbc)
+
+law le_refl_nat:
+  for +a: Nat
+  {Nat.is_le(a,a) == True{} : Bool}
+
+def le_refl_nat(a):
+  match a:
+    case 0n:
+      {==}
+    case 1n+p:
+      le_refl_nat(p)
+
+def le_of_eq_nat(+a: Nat, +b: Nat, e: {a == b : Nat}) -> {Nat.is_le(a,b) == True{} : Bool}:
+  %e : {Nat.is_le(a,_) == True{} : Bool}
+  le_refl_nat(a)
+
+law lt_add_one_l:
+  for +a: Nat
+  {Nat.is_lt(a, Nat.add(1n,a)) == True{} : Bool}
+
+def lt_add_one_l(a):
+  match a:
+    case 0n:
+      {==}
+    case 1n+p:
+      lt_add_one_l(p)
+
+def false_of_contra(b: Bool, h: {b == True{} : Bool} -> Empty) -> {b == False{} : Bool}:
+  match b:
+    case False{}:
+      {==}
+    case True{}:
+      empty_elim({True{} == False{} : Bool}, h({==}))
+
+def not_le_of_lt(+a: Nat, +b: Nat, h: {Nat.is_lt(b,a) == True{} : Bool}) ->
+  {Nat.is_le(a,b) == False{} : Bool}:
+  false_of_contra(Nat.is_le(a,b),
+    (hle => absurd_eq(le_lt_absurd(a,b,hle,h))))
+
+def and_false_r(a: Bool) -> {Bool.and(a,False{}) == False{} : Bool}:
+  match a:
+    case False{}:
+      {==}
+    case True{}:
+      {==}
+
+def and_true_r(a: Bool) -> {Bool.and(a,True{}) == a : Bool}:
+  match a:
+    case False{}:
+      {==}
+    case True{}:
+      {==}
+
+def index_le_mono(r: Nat, i: Nat, j: Nat, h: {Nat.is_le(i,j) == True{} : Bool}) ->
+  {Nat.is_le(NavigationModel.index(r,i), NavigationModel.index(r,j)) == True{} : Bool}:
+  le_add_mono(Nat.mul(r,40n), i, j, h)
+
+def index_lt_mono(r: Nat, i: Nat, j: Nat, h: {Nat.is_lt(i,j) == True{} : Bool}) ->
+  {Nat.is_lt(NavigationModel.index(r,i), NavigationModel.index(r,j)) == True{} : Bool}:
+  lt_add_mono(Nat.mul(r,40n), i, j, h)
+
+def within_suffix_true(+r: Nat, +i: Nat, +j: Nat, h: {Nat.is_le(j,i) == True{} : Bool}) ->
+  {NavigationFind.within(NavigationModel.index(r,i), NavigationModel.index(r,j)) == True{} : Bool}:
+  ge_of_le(NavigationModel.index(r,j), NavigationModel.index(r,i), index_le_mono(r,j,i,h))
+
+def within_suffix_false(+r: Nat, +i: Nat, +j: Nat, h: {Nat.is_lt(i,j) == True{} : Bool}) ->
+  {NavigationFind.within(NavigationModel.index(r,i), NavigationModel.index(r,j)) == False{} : Bool}:
+  Equal.trans(Bool, Nat.is_ge(NavigationModel.index(r,i), NavigationModel.index(r,j)),
+    Nat.is_le(NavigationModel.index(r,j), NavigationModel.index(r,i)), False{},
+    le_ge_swap(NavigationModel.index(r,i), NavigationModel.index(r,j)),
+    not_le_of_lt(NavigationModel.index(r,j), NavigationModel.index(r,i), index_lt_mono(r,i,j,h)))
+
+def within_zero_true(+i: Nat) -> {NavigationFind.within(i, 0n) == True{} : Bool}:
+  ge_of_le(0n, i, zero_le(i))
+
+def and_congr_r(a: Bool, b1: Bool, b2: Bool, e: {b1 == b2 : Bool}) ->
+  {Bool.and(a,b1) == Bool.and(a,b2) : Bool}:
+  Equal.cong(Bool, Bool, (z => Bool.and(a,z)), b1, b2, e)
+
+def bit_congr(b1: Bool, b2: Bool, e: {b1 == b2 : Bool}) ->
+  {NavigationModel.bit(b1) == NavigationModel.bit(b2) : Nat}:
+  Equal.cong(Bool, Nat, (z => NavigationModel.bit(z)), b1, b2, e)
+
+def add_congr_l(a1: Nat, a2: Nat, +b: Nat, e: {a1 == a2 : Nat}) ->
+  {Nat.add(a1,b) == Nat.add(a2,b) : Nat}:
+  Equal.cong(Nat, Nat, (z => Nat.add(z,b)), a1, a2, e)
+
+def add_congr_r(+a: Nat, b1: Nat, b2: Nat, e: {b1 == b2 : Nat}) ->
+  {Nat.add(a,b1) == Nat.add(a,b2) : Nat}:
+  Equal.cong(Nat, Nat, (z => Nat.add(a,z)), b1, b2, e)
+
+law hits_zero_below:
+  for +fuel: Nat
+  for +text: String
+  for +p: Nat
+  for +j: Nat
+  for +target: Char
+  for +right: Bool
+  for hle: {Nat.is_le(fuel,j) == True{} : Bool}
+  {NavigationFind.hits(fuel,text,p,NavigationModel.index(NavigationModel.row(p),j),target,right) == 0n : Nat}
+
+def hits_zero_below(fuel,text,p,j,target,right,hle):
+  match fuel:
+    case 0n:
+      {==}
+    case 1n++i:
+      +hilt = lt_of_lt_le(i, 1n+i, j, lt_add_one_l(i), hle)
+      +hlei = le_of_lt(i,j, hilt)
+      Equal.trans(Nat,
+        NavigationFind.hits(1n+i,text,p,NavigationModel.index(NavigationModel.row(p),j),target,right),
+        Nat.add(NavigationModel.bit(False{}), NavigationFind.hits(i,text,p,NavigationModel.index(NavigationModel.row(p),j),target,right)),
+        0n,
+        add_congr_l(NavigationModel.bit(Bool.and(NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),i),target,right),
+            NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), NavigationModel.index(NavigationModel.row(p),j)))),
+          NavigationModel.bit(False{}),
+          NavigationFind.hits(i,text,p,NavigationModel.index(NavigationModel.row(p),j),target,right),
+          bit_congr(Bool.and(NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),i),target,right),
+              NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), NavigationModel.index(NavigationModel.row(p),j))),
+            False{},
+            Equal.trans(Bool,
+              Bool.and(NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),i),target,right),
+                NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), NavigationModel.index(NavigationModel.row(p),j))),
+              Bool.and(NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),i),target,right), False{}),
+              False{},
+              and_congr_r(NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),i),target,right),
+                NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), NavigationModel.index(NavigationModel.row(p),j)), False{},
+                within_suffix_false(NavigationModel.row(p), i, j, hilt)),
+              and_false_r(NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),i),target,right))))),
+        Equal.trans(Nat,
+          Nat.add(NavigationModel.bit(False{}), NavigationFind.hits(i,text,p,NavigationModel.index(NavigationModel.row(p),j),target,right)),
+          Nat.add(NavigationModel.bit(False{}), 0n),
+          0n,
+          add_congr_r(NavigationModel.bit(False{}),
+            NavigationFind.hits(i,text,p,NavigationModel.index(NavigationModel.row(p),j),target,right), 0n,
+            hits_zero_below(i,text,p,j,target,right, hlei)),
+          {==}))
+
+def and_congr_l(a1: Bool, a2: Bool, b: Bool, e: {a1 == a2 : Bool}) ->
+  {Bool.and(a1,b) == Bool.and(a2,b) : Bool}:
+  Equal.cong(Bool, Bool, (z => Bool.and(z,b)), a1, a2, e)
+
+def hit_at(+text: String, +p: Nat, +i: Nat, +target: Char, +right: Bool) -> Bool:
+  NavigationFind.hit(text, p, NavigationModel.index(NavigationModel.row(p), i), target, right)
+
+def hits_step_false(+i: Nat, +text: String, +p: Nat, +q: Nat, +target: Char, +right: Bool,
+  hhit: {hit_at(text,p,i,target,right) == False{} : Bool}) ->
+  {NavigationFind.hits(1n+i,text,p,q,target,right) == NavigationFind.hits(i,text,p,q,target,right) : Nat}:
+  Equal.trans(Nat, NavigationFind.hits(1n+i,text,p,q,target,right),
+    Nat.add(NavigationModel.bit(Bool.and(False{}, NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q))),
+      NavigationFind.hits(i,text,p,q,target,right)),
+    NavigationFind.hits(i,text,p,q,target,right),
+    add_congr_l(NavigationModel.bit(Bool.and(hit_at(text,p,i,target,right), NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q))),
+      NavigationModel.bit(Bool.and(False{}, NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q))),
+      NavigationFind.hits(i,text,p,q,target,right),
+      bit_congr(Bool.and(hit_at(text,p,i,target,right), NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q)),
+        Bool.and(False{}, NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q)),
+        and_congr_l(hit_at(text,p,i,target,right), False{},
+          NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q), hhit))),
+    {==})
+
+def hits_step_true(+i: Nat, +text: String, +p: Nat, +q: Nat, +target: Char, +right: Bool,
+  hhit: {hit_at(text,p,i,target,right) == True{} : Bool},
+  hw: {NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q) == True{} : Bool}) ->
+  {NavigationFind.hits(1n+i,text,p,q,target,right) == Nat.add(1n, NavigationFind.hits(i,text,p,q,target,right)) : Nat}:
+  Equal.trans(Nat, NavigationFind.hits(1n+i,text,p,q,target,right),
+    Nat.add(NavigationModel.bit(Bool.and(True{}, True{})), NavigationFind.hits(i,text,p,q,target,right)),
+    Nat.add(1n, NavigationFind.hits(i,text,p,q,target,right)),
+    add_congr_l(NavigationModel.bit(Bool.and(hit_at(text,p,i,target,right), NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q))),
+      NavigationModel.bit(Bool.and(True{}, True{})),
+      NavigationFind.hits(i,text,p,q,target,right),
+      bit_congr(Bool.and(hit_at(text,p,i,target,right), NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q)),
+        Bool.and(True{}, True{}),
+        Equal.trans(Bool,
+          Bool.and(hit_at(text,p,i,target,right), NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q)),
+          Bool.and(True{}, NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q)),
+          Bool.and(True{}, True{}),
+          and_congr_l(hit_at(text,p,i,target,right), True{},
+            NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q), hhit),
+          and_congr_r(True{}, NavigationFind.within(NavigationModel.index(NavigationModel.row(p),i), q), True{}, hw)))),
+    {==})
+
+def ScanComplete(+fuel: Nat, +text: String, +p: Nat, +target: Char, +right: Bool,
+  +r: Nat, +c: Bool) -> Type:
+  &j: Nat -> (
+    {NavigationFindImpl.scan(fuel,text,p,target,right,r,c) == NavigationFindImpl.Found{j} : NavigationFindImpl.Search}
+    & ({NavigationFind.hit(text,p,j,target,right) == True{} : Bool}
+    & ({NavigationFind.hits(fuel,text,p,j,target,right) == r : Nat}
+    & ({Nat.is_lt(j, NavigationModel.index(NavigationModel.row(p),fuel)) == True{} : Bool}
+    & {c == hit_at(text,p,NavigationFindImpl.pred(fuel),target,right) : Bool}))))
+
+def scan_congr_c(+fuel: Nat, +text: String, +p: Nat, +target: Char, +right: Bool,
+  +r: Nat, c1: Bool, c2: Bool, e: {c1 == c2 : Bool}) ->
+  {NavigationFindImpl.scan(fuel,text,p,target,right,r,c1) == NavigationFindImpl.scan(fuel,text,p,target,right,r,c2) : NavigationFindImpl.Search}:
+  Equal.cong(Bool, NavigationFindImpl.Search, (z => NavigationFindImpl.scan(fuel,text,p,target,right,r,z)), c1, c2, e)
+
+def within_above_true(+r: Nat, +i: Nat, +pos: Nat,
+  h: {Nat.is_lt(pos, NavigationModel.index(r,i)) == True{} : Bool}) ->
+  {NavigationFind.within(NavigationModel.index(r,i), pos) == True{} : Bool}:
+  ge_of_le(pos, NavigationModel.index(r,i), le_of_lt(pos, NavigationModel.index(r,i), h))
+
+def below_succ(+pos: Nat, +r: Nat, +i: Nat,
+  h: {Nat.is_lt(pos, NavigationModel.index(r,i)) == True{} : Bool}) ->
+  {Nat.is_lt(pos, NavigationModel.index(r, 1n+i)) == True{} : Bool}:
+  lt_of_lt_le(pos, NavigationModel.index(r,i), NavigationModel.index(r,1n+i), h,
+    index_le_mono(r, i, 1n+i, le_of_lt(i, 1n+i, lt_add_one_l(i))))
+
+def match_head_false(+i: Nat, +text: String, +p: Nat, +target: Char, +right: Bool,
+  hhit: {hit_at(text,p,i,target,right) == False{} : Bool}) ->
+  {False{} == hit_at(text,p,i,target,right) : Bool}:
+  Equal.sym(Bool, hit_at(text,p,i,target,right), False{}, hhit)
+
+def match_head_true(+i: Nat, +text: String, +p: Nat, +target: Char, +right: Bool,
+  hhit: {hit_at(text,p,i,target,right) == True{} : Bool}) ->
+  {True{} == hit_at(text,p,i,target,right) : Bool}:
+  Equal.sym(Bool, hit_at(text,p,i,target,right), True{}, hhit)
+
+def complete_true_zero(+i: Nat, +text: String, +p: Nat, +target: Char, +right: Bool,
+  hhit: {hit_at(text,p,i,target,right) == True{} : Bool}) ->
+  ScanComplete(1n+i,text,p,target,right,1n,True{}):
+  +hh = hhit
+  ( NavigationModel.index(NavigationModel.row(p),i),
+    ( {==},
+      ( hh,
+        ( Equal.trans(Nat,
+            NavigationFind.hits(1n+i,text,p,NavigationModel.index(NavigationModel.row(p),i),target,right),
+            Nat.add(1n, NavigationFind.hits(i,text,p,NavigationModel.index(NavigationModel.row(p),i),target,right)),
+            1n,
+            hits_step_true(i,text,p,NavigationModel.index(NavigationModel.row(p),i),target,right,hh,
+              within_suffix_true(NavigationModel.row(p),i,i,le_refl_nat(i))),
+            Equal.trans(Nat,
+              Nat.add(1n, NavigationFind.hits(i,text,p,NavigationModel.index(NavigationModel.row(p),i),target,right)),
+              Nat.add(1n, 0n),
+              1n,
+              add_congr_r(1n, NavigationFind.hits(i,text,p,NavigationModel.index(NavigationModel.row(p),i),target,right), 0n,
+                hits_zero_below(i,text,p,i,target,right,le_refl_nat(i))),
+              {==}) ),
+          ( index_lt_mono(NavigationModel.row(p), i, 1n+i, lt_add_one_l(i)),
+            match_head_true(i,text,p,target,right,hh) ) ) ) ) )
+
+def complete_false_zero(+i: Nat, +text: String, +p: Nat, +target: Char, +right: Bool,
+  +c_next: Bool,
+  hhit: {hit_at(text,p,i,target,right) == False{} : Bool},
+  tail: ScanComplete(i,text,p,target,right,1n,c_next)) ->
+  ScanComplete(1n+i,text,p,target,right,1n,False{}):
+  match tail:
+    case (+j, (scan_eq, (hit_eq, (hits_eq, (+below_eq, match_eq))))):
+      +hh = hhit
+      ( j,
+        ( Equal.trans(NavigationFindImpl.Search, NavigationFindImpl.scan(1n+i,text,p,target,right,1n,False{}),
+            NavigationFindImpl.scan(i,text,p,target,right,1n,hit_at(text,p,NavigationFindImpl.pred(i),target,right)),
+            NavigationFindImpl.Found{j},
+            {==},
+            Equal.trans(NavigationFindImpl.Search,
+              NavigationFindImpl.scan(i,text,p,target,right,1n,hit_at(text,p,NavigationFindImpl.pred(i),target,right)),
+              NavigationFindImpl.scan(i,text,p,target,right,1n,c_next),
+              NavigationFindImpl.Found{j},
+              scan_congr_c(i,text,p,target,right,1n,
+                hit_at(text,p,NavigationFindImpl.pred(i),target,right), c_next, Equal.sym(Bool, c_next, hit_at(text,p,NavigationFindImpl.pred(i),target,right), match_eq)),
+              scan_eq)),
+          ( hit_eq,
+            ( Equal.trans(Nat, NavigationFind.hits(1n+i,text,p,j,target,right),
+                NavigationFind.hits(i,text,p,j,target,right), 1n,
+                hits_step_false(i,text,p,j,target,right,hh), hits_eq),
+              ( below_succ(j,NavigationModel.row(p),i,below_eq),
+                match_head_false(i,text,p,target,right,hh) ) ) ) ) )
+
+def complete_false_more(+i: Nat, +text: String, +p: Nat, +target: Char, +right: Bool,
+  +q2: Nat, +c_next: Bool,
+  hhit: {hit_at(text,p,i,target,right) == False{} : Bool},
+  tail: ScanComplete(i,text,p,target,right,2n+q2,c_next)) ->
+  ScanComplete(1n+i,text,p,target,right,2n+q2,False{}):
+  match tail:
+    case (+j, (scan_eq, (hit_eq, (hits_eq, (+below_eq, match_eq))))):
+      +hh = hhit
+      ( j,
+        ( Equal.trans(NavigationFindImpl.Search, NavigationFindImpl.scan(1n+i,text,p,target,right,2n+q2,False{}),
+            NavigationFindImpl.scan(i,text,p,target,right,2n+q2,hit_at(text,p,NavigationFindImpl.pred(i),target,right)),
+            NavigationFindImpl.Found{j},
+            {==},
+            Equal.trans(NavigationFindImpl.Search,
+              NavigationFindImpl.scan(i,text,p,target,right,2n+q2,hit_at(text,p,NavigationFindImpl.pred(i),target,right)),
+              NavigationFindImpl.scan(i,text,p,target,right,2n+q2,c_next),
+              NavigationFindImpl.Found{j},
+              scan_congr_c(i,text,p,target,right,2n+q2,
+                hit_at(text,p,NavigationFindImpl.pred(i),target,right), c_next, Equal.sym(Bool, c_next, hit_at(text,p,NavigationFindImpl.pred(i),target,right), match_eq)),
+              scan_eq)),
+          ( hit_eq,
+            ( Equal.trans(Nat, NavigationFind.hits(1n+i,text,p,j,target,right),
+                NavigationFind.hits(i,text,p,j,target,right), 2n+q2,
+                hits_step_false(i,text,p,j,target,right,hh), hits_eq),
+              ( below_succ(j,NavigationModel.row(p),i,below_eq),
+                match_head_false(i,text,p,target,right,hh) ) ) ) ) )
+
+def complete_true_more(+i: Nat, +text: String, +p: Nat, +target: Char, +right: Bool,
+  +q2: Nat, +c_next: Bool,
+  hhit: {hit_at(text,p,i,target,right) == True{} : Bool},
+  tail: ScanComplete(i,text,p,target,right,1n+q2,c_next)) ->
+  ScanComplete(1n+i,text,p,target,right,2n+q2,True{}):
+  match tail:
+    case (+j, (scan_eq, (hit_eq, (hits_eq, (+below_eq, match_eq))))):
+      +hh = hhit
+      ( j,
+        ( Equal.trans(NavigationFindImpl.Search, NavigationFindImpl.scan(1n+i,text,p,target,right,2n+q2,True{}),
+            NavigationFindImpl.scan(i,text,p,target,right,1n+q2,hit_at(text,p,NavigationFindImpl.pred(i),target,right)),
+            NavigationFindImpl.Found{j},
+            {==},
+            Equal.trans(NavigationFindImpl.Search,
+              NavigationFindImpl.scan(i,text,p,target,right,1n+q2,hit_at(text,p,NavigationFindImpl.pred(i),target,right)),
+              NavigationFindImpl.scan(i,text,p,target,right,1n+q2,c_next),
+              NavigationFindImpl.Found{j},
+              scan_congr_c(i,text,p,target,right,1n+q2,
+                hit_at(text,p,NavigationFindImpl.pred(i),target,right), c_next, Equal.sym(Bool, c_next, hit_at(text,p,NavigationFindImpl.pred(i),target,right), match_eq)),
+              scan_eq)),
+          ( hit_eq,
+            ( Equal.trans(Nat, NavigationFind.hits(1n+i,text,p,j,target,right),
+                Nat.add(1n, NavigationFind.hits(i,text,p,j,target,right)), 2n+q2,
+                hits_step_true(i,text,p,j,target,right,hh,
+                  within_above_true(NavigationModel.row(p),i,j,below_eq)),
+                Equal.trans(Nat,
+                  Nat.add(1n, NavigationFind.hits(i,text,p,j,target,right)),
+                  Nat.add(1n, 1n+q2), 2n+q2,
+                  add_congr_r(1n, NavigationFind.hits(i,text,p,j,target,right), 1n+q2, hits_eq),
+                  {==})),
+              ( below_succ(j,NavigationModel.row(p),i,below_eq),
+                match_head_true(i,text,p,target,right,hh) ) ) ) ) )
+
+def le_transport_r(+a: Nat, b1: Nat, b2: Nat,
+  h: {Nat.is_le(a,b1) == True{} : Bool},
+  e: {b2 == b1 : Nat}) -> {Nat.is_le(a,b2) == True{} : Bool}:
+  Equal.trans(Bool, Nat.is_le(a,b2), Nat.is_le(a,b1), True{},
+    Equal.cong(Nat, Bool, (z => Nat.is_le(a,z)), b2, b1, e), h)
+
+def one_le_one_add(+q2: Nat) -> {Nat.is_le(1n, 1n+q2) == True{} : Bool}:
+  match q2:
+    case 0n:
+      {==}
+    case 1n+k:
+      {==}
+
+def scan_complete(+fuel: Nat, +text: String, +p: Nat, +target: Char, +right: Bool,
+  +r: Nat, +c: Bool,
+  hc: {c == hit_at(text,p,NavigationFindImpl.pred(fuel),target,right) : Bool},
+  hr: {Nat.is_le(1n,r) == True{} : Bool},
+  hle: {Nat.is_le(r, NavigationFind.hits(fuel,text,p,NavigationFind.limit(right),target,right)) == True{} : Bool}) ->
+  ScanComplete(fuel,text,p,target,right,r,c):
+  match fuel:
+    case 0n:
+      match r:
+        case 0n:
+          empty_elim(ScanComplete(0n,text,p,target,right,0n,c), absurd_eq(hr))
+        case 1n+k:
+          empty_elim(ScanComplete(0n,text,p,target,right,1n+k,c), absurd_eq(hle))
+    case 1n++i:
+      match r:
+        case 0n:
+          empty_elim(ScanComplete(1n+i,text,p,target,right,0n,c), absurd_eq(hr))
+        case 1n++q:
+          match q:
+            case 0n:
+              match c:
+                case True{}:
+                  complete_true_zero(i,text,p,target,right,
+                    Equal.sym(Bool, True{}, hit_at(text,p,i,target,right), hc))
+                case False{}:
+                  +hh = Equal.sym(Bool, False{}, hit_at(text,p,i,target,right), hc)
+                  +hle_tail = le_transport_r(1n, NavigationFind.hits(1n+i,text,p,NavigationFind.limit(right),target,right),
+                    NavigationFind.hits(i,text,p,NavigationFind.limit(right),target,right), hle,
+                    Equal.sym(Nat, NavigationFind.hits(1n+i,text,p,NavigationFind.limit(right),target,right),
+                      NavigationFind.hits(i,text,p,NavigationFind.limit(right),target,right),
+                      hits_step_false(i,text,p,NavigationFind.limit(right),target,right,hh)))
+                  complete_false_zero(i,text,p,target,right,
+                    hit_at(text,p,NavigationFindImpl.pred(i),target,right), hh,
+                    scan_complete(i,text,p,target,right,1n,
+                      hit_at(text,p,NavigationFindImpl.pred(i),target,right), {==}, le_refl_nat(1n), hle_tail))
+            case 1n++q2:
+              match c:
+                case True{}:
+                  +hh = Equal.sym(Bool, True{}, hit_at(text,p,i,target,right), hc)
+                  +hle_raw = le_transport_r(2n+q2,
+                    NavigationFind.hits(1n+i,text,p,NavigationFind.limit(right),target,right),
+                    Nat.add(1n, NavigationFind.hits(i,text,p,NavigationFind.limit(right),target,right)), hle,
+                    Equal.sym(Nat, NavigationFind.hits(1n+i,text,p,NavigationFind.limit(right),target,right),
+                      Nat.add(1n, NavigationFind.hits(i,text,p,NavigationFind.limit(right),target,right)),
+                      hits_step_true(i,text,p,NavigationFind.limit(right),target,right,hh,
+                        within_zero_true(NavigationModel.index(NavigationModel.row(p),i)))))
+                  complete_true_more(i,text,p,target,right,q2,
+                    hit_at(text,p,NavigationFindImpl.pred(i),target,right), hh,
+                    scan_complete(i,text,p,target,right,1n+q2,
+                      hit_at(text,p,NavigationFindImpl.pred(i),target,right), {==}, one_le_one_add(q2), hle_raw))
+                case False{}:
+                  +hh = Equal.sym(Bool, False{}, hit_at(text,p,i,target,right), hc)
+                  +hle_tail = le_transport_r(2n+q2,
+                    NavigationFind.hits(1n+i,text,p,NavigationFind.limit(right),target,right),
+                    NavigationFind.hits(i,text,p,NavigationFind.limit(right),target,right), hle,
+                    Equal.sym(Nat, NavigationFind.hits(1n+i,text,p,NavigationFind.limit(right),target,right),
+                      NavigationFind.hits(i,text,p,NavigationFind.limit(right),target,right),
+                      hits_step_false(i,text,p,NavigationFind.limit(right),target,right,hh)))
+                  complete_false_more(i,text,p,target,right,q2,
+                    hit_at(text,p,NavigationFindImpl.pred(i),target,right), hh,
+                    scan_complete(i,text,p,target,right,2n+q2,
+                      hit_at(text,p,NavigationFindImpl.pred(i),target,right), {==}, hr, hle_tail))
+
+law le_trans_nat:
+  for +a: Nat
+  for +b: Nat
+  for +c: Nat
+  for hab: {Nat.is_le(a,b) == True{} : Bool}
+  for hbc: {Nat.is_le(b,c) == True{} : Bool}
+  {Nat.is_le(a,c) == True{} : Bool}
+
+def le_trans_nat(a,b,c,hab,hbc):
+  match a b c:
+    case 0n b c:
+      match c:
+        case 0n:
+          {==}
+        case 1n+pc:
+          {==}
+    case 1n+pa b c:
+      match b:
+        case 0n:
+          empty_elim({Nat.is_le(1n+pa,c)==True{} : Bool}, false_elim(1n+pa,hab))
+        case 1n+pb:
+          match c:
+            case 0n:
+              empty_elim({Nat.is_le(1n+pa,0n)==True{} : Bool}, false_elim(1n+pb,hbc))
+            case 1n+pc:
+              le_trans_nat(pa,pb,pc,hab,hbc)
+
+def le_succ_l(+a: Nat) -> {Nat.is_le(a, 1n+a) == True{} : Bool}:
+  le_of_lt(a, 1n+a, lt_add_one_l(a))
+
+law sub_zero_r:
+  for +a: Nat
+  {Nat.sub(a,0n) == a : Nat}
+
+def sub_zero_r(a):
+  match a:
+    case 0n:
+      {==}
+    case 1n+p:
+      {==}
+
+law sub_plus_one_le_total:
+  for +total: Nat
+  for +count: Nat
+  for hcount: {Nat.is_le(1n,count) == True{} : Bool}
+  for hle: {Nat.is_le(count,total) == True{} : Bool}
+  {Nat.is_le(Nat.add(Nat.sub(total,count),1n), total) == True{} : Bool}
+
+def sub_plus_one_le_total(total,count,hcount,hle):
+  match total count:
+    case 0n 0n:
+      empty_elim({Nat.is_le(Nat.add(Nat.sub(0n,0n),1n),0n)==True{} : Bool},
+        absurd_eq(hcount))
+    case 0n 1n+pc:
+      empty_elim({Nat.is_le(Nat.add(Nat.sub(0n,1n+pc),1n),0n)==True{} : Bool},
+        absurd_eq(hle))
+    case 1n+pt 0n:
+      empty_elim({Nat.is_le(Nat.add(Nat.sub(1n+pt,0n),1n),1n+pt)==True{} : Bool},
+        absurd_eq(hcount))
+    case 1n+pt 1n+pc:
+      match pc:
+        case 0n:
+          Equal.trans(Bool,
+            Nat.is_le(Nat.add(Nat.sub(1n+pt,1n),1n),1n+pt),
+            Nat.is_le(Nat.add(pt,1n),1n+pt),
+            True{},
+            Equal.cong(Nat,Bool,(z=>Nat.is_le(Nat.add(z,1n),1n+pt)),
+              Nat.sub(1n+pt,1n), pt,
+              Equal.trans(Nat, Nat.sub(1n+pt,1n), Nat.sub(pt,0n), pt,
+                {==}, sub_zero_r(pt))),
+            Equal.trans(Bool,
+              Nat.is_le(Nat.add(pt,1n),1n+pt),
+              Nat.is_le(Nat.add(1n,pt),1n+pt),
+              True{},
+              Equal.cong(Nat,Bool,(z=>Nat.is_le(z,1n+pt)),
+                Nat.add(pt,1n), Nat.add(1n,pt), add_comm(pt,1n)),
+              le_refl_nat(1n+pt)))
+        case 1n+pc2:
+          le_trans_nat(Nat.add(Nat.sub(pt,1n+pc2),1n), pt, 1n+pt,
+            sub_plus_one_le_total(pt, 1n+pc2, one_le_one_add(pc2), hle),
+            le_succ_l(pt))
+
+def make_zero_positive(+x: Nat) -> {Nat.is_le(1n, Nat.add(x,1n)) == True{} : Bool}:
+  succ_le_of_lt(0n, Nat.add(x,1n), zero_lt_add_one(x))
+
+def rank_positive(right: Bool, +count: Nat, +total: Nat,
+  hcount: {Nat.is_le(1n,count) == True{} : Bool}) ->
+  {Nat.is_le(1n, NavigationFind.rank(right,count,total)) == True{} : Bool}:
+  match right:
+    case True{}:
+      make_zero_positive(Nat.sub(total,count))
+    case False{}:
+      hcount
+
+
+
+def rank_le_total(right: Bool, +count: Nat, +total: Nat,
+  hcount: {Nat.is_le(1n,count) == True{} : Bool},
+  hle: {Nat.is_le(count,total) == True{} : Bool}) ->
+  {Nat.is_le(NavigationFind.rank(right,count,total), total) == True{} : Bool}:
+  match right:
+    case True{}:
+      sub_plus_one_le_total(total,count,hcount,hle)
+    case False{}:
+      hle
+
+def cmp_gt_of_not_le(c: Cmp, h: {Cmp.is_le(c) == False{} : Bool}) ->
+  {Cmp.is_gt(c) == True{} : Bool}:
+  match c:
+    case LT{}:
+      empty_elim({Cmp.is_gt(LT{}) == True{} : Bool}, absurd_eq(Equal.sym(Bool, True{}, False{}, h)))
+    case EQ{}:
+      empty_elim({Cmp.is_gt(EQ{}) == True{} : Bool}, absurd_eq(Equal.sym(Bool, True{}, False{}, h)))
+    case GT{}:
+      {==}
+
+def gt_of_not_le(+a: Nat, +b: Nat, h: {Nat.is_le(a,b) == False{} : Bool}) ->
+  {Nat.is_gt(a,b) == True{} : Bool}:
+  cmp_gt_of_not_le(Nat.cmp(a,b), h)
+
+def NavigationFind.zero(f, p, target, right):
+  {==}
+
+def find_pick_found(p: Nat, j: Nat) ->
+  {NavigationFindImpl.pick(p, NavigationFindImpl.Found{j}) == j : Nat}:
+  {==}
+
+def find_pick_congr(p: Nat, res1: NavigationFindImpl.Search, res2: NavigationFindImpl.Search,
+  e: {res1 == res2 : NavigationFindImpl.Search}) ->
+  {NavigationFindImpl.pick(p,res1) == NavigationFindImpl.pick(p,res2) : Nat}:
+  Equal.cong(NavigationFindImpl.Search, Nat, (z => NavigationFindImpl.pick(p,z)), res1, res2, e)
+
+def find_hit_inside(+text: String, +p: Nat, +j: Nat, +target: Char, +right: Bool,
+  h: {NavigationFind.hit(text,p,j,target,right) == True{} : Bool}) ->
+  {NavigationModel.inside(j) == True{} : Bool}:
+  and_left(NavigationModel.inside(j),
+    Bool.and(Nat.is_eq(NavigationModel.row(j), NavigationModel.row(p)),
+      Bool.and(NavigationFind.toward(p,j,right),
+        Char.is_eq(NavigationModel.text_at(text,j), target))), h)
+
+def find_selected_from(+text: String, +p: Nat, +target: Char, +right: Bool, +count: Nat,
+  hle: {Nat.is_le(count, NavigationFind.total(text,p,target,right)) == True{} : Bool},
+  w: ScanComplete(40n,text,p,target,right,
+    NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+    NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right))) ->
+  {NavigationFind.selected(text,p,target,right,count,
+    NavigationFindImpl.pick(p, NavigationFindImpl.scan(40n,text,p,target,right,
+      NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+      NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right)))) == True{} : Bool}:
+  match w:
+    case (+j, (scan_eq, (hit_eq, (hits_eq, (below_eq, match_eq))))):
+      +hitp = hit_eq
+      +eq_hits = eq_is_eq(NavigationFind.hits(40n,text,p,j,target,right),
+        NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)), hits_eq)
+      +out_eq = Equal.trans(Nat,
+        NavigationFindImpl.pick(p, NavigationFindImpl.scan(40n,text,p,target,right,
+          NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+          NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right))),
+        NavigationFindImpl.pick(p, NavigationFindImpl.Found{j}),
+        j,
+        find_pick_congr(p, NavigationFindImpl.scan(40n,text,p,target,right,
+          NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+          NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right)),
+          NavigationFindImpl.Found{j}, scan_eq),
+        find_pick_found(p,j))
+      Equal.trans(Bool,
+        NavigationFind.selected(text,p,target,right,count,
+          NavigationFindImpl.pick(p, NavigationFindImpl.scan(40n,text,p,target,right,
+            NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+            NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right)))),
+        NavigationFind.selected(text,p,target,right,count,j),
+        True{},
+        Equal.cong(Nat, Bool, (z => NavigationFind.selected(text,p,target,right,count,z)),
+          NavigationFindImpl.pick(p, NavigationFindImpl.scan(40n,text,p,target,right,
+            NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+            NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right))),
+          j, out_eq),
+        or_true_of_true_l(
+          Bool.and(Nat.is_le(count, NavigationFind.total(text,p,target,right)),
+            Bool.and(NavigationFind.hit(text,p,j,target,right),
+              Nat.is_eq(NavigationFind.hits(40n,text,p,j,target,right),
+                NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right))))),
+          Bool.and(Nat.is_gt(count, NavigationFind.total(text,p,target,right)),
+            Nat.is_eq(j,p)),
+          and_intro(Nat.is_le(count, NavigationFind.total(text,p,target,right)),
+            Bool.and(NavigationFind.hit(text,p,j,target,right),
+              Nat.is_eq(NavigationFind.hits(40n,text,p,j,target,right),
+                NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)))),
+            hle,
+            and_intro(NavigationFind.hit(text,p,j,target,right),
+              Nat.is_eq(NavigationFind.hits(40n,text,p,j,target,right),
+                NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right))),
+              hitp, eq_hits))))
+
+def find_move_plus(+f: NavigationModel.Field, +p: Nat, +target: Char, +right: Bool,
+  +k: Nat, g: Bool,
+  hg: {g == Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)) : Bool}) ->
+  {NavigationFindImpl.move_impl(f,p,target,right,1n+k) ==
+    NavigationFindImpl.move_positive(f,p,target,right,1n+k,g) : Nat}:
+  Equal.cong(Bool, Nat,
+    (z => NavigationFindImpl.move_positive(f,p,target,right,1n+k,z)),
+    Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)),
+    g, Equal.sym(Bool, g,
+      Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)), hg))
+
+law find_contents_norm:
+  for f: NavigationModel.Field
+  {NavigationModel.contents(f) == NavigationModelImpl.norm(800n,f) : String}
+
+def find_contents_norm(f):
+  {==}
+
+def find_exact_plus(+f: NavigationModel.Field, +p: Nat, +target: Char, +right: Bool,
+  +k: Nat, +ok: {NavigationModel.inside(p) == True{} : Bool}, g: Bool,
+  hg: {g == Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)) : Bool}) ->
+  {NavigationFind.selected(NavigationModelImpl.norm(800n,f),p,target,right,1n+k,
+    NavigationFindImpl.move_impl(f,p,target,right,1n+k)) == True{} : Bool}:
+  match g:
+    case True{}:
+      +hgc = hg
+      +hle = Equal.sym(Bool, g,
+        Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)), hgc)
+      +hcount = one_le_one_add(k)
+      +hr = rank_positive(right, 1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right), hcount)
+      +hrankle = rank_le_total(right, 1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right), hcount, hle)
+      +branch = find_selected_from(NavigationModelImpl.norm(800n,f),p,target,right,1n+k,hle,
+        scan_complete(40n,NavigationModelImpl.norm(800n,f),p,target,right,
+          NavigationFind.rank(right,1n+k,NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)),
+          NavigationFind.hit(NavigationModelImpl.norm(800n,f),p,NavigationModel.index(NavigationModel.row(p),39n),target,right),
+          {==}, hr, hrankle))
+      Equal.trans(Bool,
+        NavigationFind.selected(NavigationModelImpl.norm(800n,f),p,target,right,1n+k,
+          NavigationFindImpl.move_impl(f,p,target,right,1n+k)),
+        NavigationFind.selected(NavigationModelImpl.norm(800n,f),p,target,right,1n+k,
+          NavigationFindImpl.move_positive(f,p,target,right,1n+k,True{})),
+        True{},
+        Equal.cong(Nat, Bool,
+          (z => NavigationFind.selected(NavigationModelImpl.norm(800n,f),p,target,right,1n+k,z)),
+          NavigationFindImpl.move_impl(f,p,target,right,1n+k),
+          NavigationFindImpl.move_positive(f,p,target,right,1n+k,True{}),
+          find_move_plus(f,p,target,right,k,True{},hgc)),
+        branch)
+    case False{}:
+      +hgc = hg
+      +notle = Equal.sym(Bool, g,
+        Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)), hgc)
+      +hgt = gt_of_not_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right), notle)
+      +branch = or_true_of_true_r(
+        Bool.and(Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)),
+          Bool.and(NavigationFind.hit(NavigationModelImpl.norm(800n,f),p,p,target,right),
+            Nat.is_eq(NavigationFind.hits(40n,NavigationModelImpl.norm(800n,f),p,p,target,right),
+              NavigationFind.rank(right,1n+k,NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right))))),
+        Bool.and(Nat.is_gt(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)),
+          Nat.is_eq(p,p)),
+        and_intro(Nat.is_gt(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)),
+          Nat.is_eq(p,p), hgt, is_eq_refl(p)))
+      Equal.trans(Bool,
+        NavigationFind.selected(NavigationModelImpl.norm(800n,f),p,target,right,1n+k,
+          NavigationFindImpl.move_impl(f,p,target,right,1n+k)),
+        NavigationFind.selected(NavigationModelImpl.norm(800n,f),p,target,right,1n+k,
+          NavigationFindImpl.move_positive(f,p,target,right,1n+k,False{})),
+        True{},
+        Equal.cong(Nat, Bool,
+          (z => NavigationFind.selected(NavigationModelImpl.norm(800n,f),p,target,right,1n+k,z)),
+          NavigationFindImpl.move_impl(f,p,target,right,1n+k),
+          NavigationFindImpl.move_positive(f,p,target,right,1n+k,False{}),
+          find_move_plus(f,p,target,right,k,False{},hgc)),
+        branch)
+
+def NavigationFind.exact(f,p,target,right,n,ok):
+  Equal.trans(Bool,
+    NavigationFind.selected(NavigationModelImpl.norm(800n,f),p,target,right,1n+n,
+      NavigationFindImpl.move_impl(f,p,target,right,1n+n)),
+    NavigationFind.selected(NavigationModel.contents(f),p,target,right,1n+n,
+      NavigationFindImpl.move_impl(f,p,target,right,1n+n)),
+    True{},
+    Equal.cong(String, Bool,
+      (z => NavigationFind.selected(z,p,target,right,1n+n,
+        NavigationFindImpl.move_impl(f,p,target,right,1n+n))),
+      NavigationModelImpl.norm(800n,f), NavigationModel.contents(f),
+      Equal.sym(String, NavigationModel.contents(f), NavigationModelImpl.norm(800n,f),
+        find_contents_norm(f))),
+    find_exact_plus(f,p,target,right,n,ok,
+      Nat.is_le(1n+n, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)),
+      {==}))
+
+def find_bounded_from(+text: String, +p: Nat, +target: Char, +right: Bool, +count: Nat,
+  w: ScanComplete(40n,text,p,target,right,
+    NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+    NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right))) ->
+  {NavigationModel.inside(NavigationFindImpl.pick(p, NavigationFindImpl.scan(40n,text,p,target,right,
+    NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+    NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right)))) == True{} : Bool}:
+  match w:
+    case (+j, (scan_eq, (hit_eq, (hits_eq, (below_eq, match_eq))))):
+      +hitp = hit_eq
+      +out_eq = Equal.trans(Nat,
+        NavigationFindImpl.pick(p, NavigationFindImpl.scan(40n,text,p,target,right,
+          NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+          NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right))),
+        NavigationFindImpl.pick(p, NavigationFindImpl.Found{j}),
+        j,
+        find_pick_congr(p, NavigationFindImpl.scan(40n,text,p,target,right,
+          NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+          NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right)),
+          NavigationFindImpl.Found{j}, scan_eq),
+        find_pick_found(p,j))
+      Equal.trans(Bool,
+        NavigationModel.inside(NavigationFindImpl.pick(p, NavigationFindImpl.scan(40n,text,p,target,right,
+          NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+          NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right)))),
+        NavigationModel.inside(j),
+        True{},
+        Equal.cong(Nat, Bool, (z => NavigationModel.inside(z)),
+          NavigationFindImpl.pick(p, NavigationFindImpl.scan(40n,text,p,target,right,
+            NavigationFind.rank(right,count,NavigationFind.total(text,p,target,right)),
+            NavigationFind.hit(text,p,NavigationModel.index(NavigationModel.row(p),39n),target,right))),
+          j, out_eq),
+        find_hit_inside(text,p,j,target,right,hitp))
+
+def find_bounded_plus(+f: NavigationModel.Field, +p: Nat, +target: Char, +right: Bool,
+  +k: Nat, +ok: {NavigationModel.inside(p) == True{} : Bool}, g: Bool,
+  hg: {g == Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)) : Bool}) ->
+  {NavigationModel.inside(NavigationFindImpl.move_impl(f,p,target,right,1n+k)) == True{} : Bool}:
+  match g:
+    case True{}:
+      +hgc = hg
+      +hle = Equal.sym(Bool, g,
+        Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)), hgc)
+      +hcount = one_le_one_add(k)
+      +hr = rank_positive(right, 1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right), hcount)
+      +hrankle = rank_le_total(right, 1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right), hcount, hle)
+      +branch = find_bounded_from(NavigationModelImpl.norm(800n,f),p,target,right,1n+k,
+        scan_complete(40n,NavigationModelImpl.norm(800n,f),p,target,right,
+          NavigationFind.rank(right,1n+k,NavigationFind.total(NavigationModelImpl.norm(800n,f),p,target,right)),
+          NavigationFind.hit(NavigationModelImpl.norm(800n,f),p,NavigationModel.index(NavigationModel.row(p),39n),target,right),
+          {==}, hr, hrankle))
+      Equal.trans(Bool,
+        NavigationModel.inside(NavigationFindImpl.move_impl(f,p,target,right,1n+k)),
+        NavigationModel.inside(NavigationFindImpl.move_positive(f,p,target,right,1n+k,True{})),
+        True{},
+        Equal.cong(Nat, Bool, (z => NavigationModel.inside(z)),
+          NavigationFindImpl.move_impl(f,p,target,right,1n+k),
+          NavigationFindImpl.move_positive(f,p,target,right,1n+k,True{}),
+          find_move_plus(f,p,target,right,k,True{},hgc)),
+        branch)
+    case False{}:
+      +hgc = hg
+      Equal.trans(Bool,
+        NavigationModel.inside(NavigationFindImpl.move_impl(f,p,target,right,1n+k)),
+        NavigationModel.inside(NavigationFindImpl.move_positive(f,p,target,right,1n+k,False{})),
+        True{},
+        Equal.cong(Nat, Bool, (z => NavigationModel.inside(z)),
+          NavigationFindImpl.move_impl(f,p,target,right,1n+k),
+          NavigationFindImpl.move_positive(f,p,target,right,1n+k,False{}),
+          find_move_plus(f,p,target,right,k,False{},hgc)),
+        ok)
+
+def NavigationFind.bounded(f,p,target,right,n,ok):
+  match n:
+    case 0n:
+      ok
+    case 1n++k:
+      +ff = f
+      +pp = p
+      +tt = target
+      +rr = right
+      find_bounded_plus(ff,pp,tt,rr,k,ok,
+        Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,ff),pp,tt,rr)), {==})

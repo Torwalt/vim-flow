@@ -4,6 +4,7 @@ import ./spec/navigation/model.bend as NavigationModel
 import ./spec/navigation/axis.bend as NavigationAxis
 import ./spec/navigation/words.bend as NavigationWords
 import ./spec/navigation/lines.bend as NavigationLines
+import ./spec/navigation/find.bend as NavigationFind
 
 # The approved navigation obligations are frozen in spec/navigation/ALL.bend.
 # The Ploopy pass activates each unchanged module here as it implements it;

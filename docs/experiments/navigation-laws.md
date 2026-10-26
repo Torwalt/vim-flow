@@ -172,3 +172,34 @@ type signatures were sufficient; whether direct relational nearest/nth laws
 were tractable; whether smaller proof units would help; whether snapshot
 extensionality avoided storage assumptions; and whether the staged/full-proof
 distinction stayed clear. Add recommendations only after observing the run.
+
+## Unit 5.1 contract revision — row-local rank interval
+
+The old find interval compared the absolute row candidate with an absolute
+threshold: forward within used `candidate <= out`, backward used
+`candidate >= out`, and the all-matches bound was the field limit 799 or 0.
+`selected` therefore read a forward prefix rank `n` and a backward suffix rank
+`n` at `out`.
+
+The new `within` is the row-local lower-bound interval `i >= q`, `limit` is 0
+for both directions, and `selected` reads the same suffix count for both. A
+forward nth match from the low end is equivalently the `total - n + 1`-th match
+from the high end, so the forward disjunct uses `rank(right, n, total)` and the
+backward one uses `n`; both require `hit(out)` and the suffix count at `out`.
+For a hit `out`, the old forward prefix count was `n` exactly when the suffix
+count was `total - n + 1`; the backward disjunct is unchanged. Totals are the
+same set of row hits. The fallback `n > total` and `out = position` are
+untouched. This is a proof-interface and equivalent-formulation revision, not
+a behavior change.
+
+The rank argument is now aligned with the kernel scan: `scan` walks local
+columns from high to low, and `scan_complete` proves by induction on the
+remaining fuel that a positive rank within the interval yields a hit, the
+required suffix count, and a position below the scanned row prefix. `hits_zero_below`
+proves the strict suffix tail is empty, and `sub_plus_one_le_total` supplies the
+forward rank bound `total - n + 1 <= total`. The forward and backward laws use
+the same scan and the same rank lemma.
+
+Checks: the manifest hash for `spec/navigation/find.bend` was updated in the
+implementation commit; the declaration count remains 63. `just proof`
+(kernel `--verdict`), `just verify` and `direnv exec . just test` are green.
