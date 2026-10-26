@@ -77,6 +77,32 @@
         "reasoning": 65483,
         "cache_read": 6548352
       }
+    },
+    "4.1": {
+      "status": "landed",
+      "outcome": "done",
+      "date": "2026-10-26T19:14:48+01:00",
+      "agent": "opencode deepseek/deepseek-flash high",
+      "base": "cad38f12d248e65415acdfb30c4c6f5ce5078a15",
+      "commits": [
+        "50cb55d6fe8fbbd0c6b4caceecc11d7747da110f Implement and prove line destinations",
+        "0a336105f034a111903cdd287a3f8717377c66b7 Record line movement experiment evidence"
+      ],
+      "attempts": 1,
+      "handover": "# Handover 4.1\n\n## What landed\n\n- `50cb55d` activates `spec/navigation/lines.bend` in `LAWS.bend`, adds\n  `src/core/navigation_lines.bend`, proves all seven line declarations through\n  `PROOF.bend`, records the contract revision, and updates the `lines.bend`\n  manifest hash without changing the declaration count.\n- `0a33610` adds the unit's row to `docs/experiments/navigation-laws.md`.\n\n## Landmark drift\n\nNone. The module, model observations, `LAWS.bend`, `PROOF.bend` and manifest\nare where the plan expects them.\n\n## Deviations from the work order\n\n- Contract revision under authority section 4: `IndentSelected`'s first\n  conjunct changed from `inside \u0026\u0026 row(out)=r \u0026\u0026 (nonblank || column=0)` to\n  `nonblank(out) || (inside(out) \u0026\u0026 out = index(r,0))`. The minimality half is\n  unchanged. `nonblank` already carries inside/row; the fallback equality pins\n  the same column-zero cell of the target row. This avoided otherwise unused\n  quotient/remainder equalities for `row(index(r,0))` and\n  `column(index(r,0))`. Old/new formulations and preservation are recorded in\n  `docs/experiments/navigation-laws.md`; manifest hash updated in the same\n  implementation commit, count still 63.\n- First-non-space scans all 800 positions with `Lines.nonblank(text,r,_)` as\n  the candidate, returning the first hit or `index(r,0)` after 800 fuel. The\n  candidate certification is why no row/column decomposition is needed.\n- `line_bounded` is a reusable proof helper over `+n`; the law filler passes\n  the affine count once. This avoids repeating an affine count across the bound\n  computation and the destination.\n- Only one production pass; proofs were checked incrementally with\n  `--check-only` before the final kernel pass.\n\n## What the next session must know\n\n- Active order in `LAWS.bend` is scene, model, axis, words, lines. Add the find\n  import below lines and leave earlier imports active.\n- `NavigationLines.move` delegates to\n  `NavigationLinesImpl.move_impl(field, p, motion, n)`; `FirstNonblank`,\n  `FirstRow` and `LastRow` read text through `navigation_model.norm(800n,\n  field)` so the implementation module does not call open `Model.contents`.\n- `target_row` supplies the relative/default semantics: `RowEnd` uses\n  `M.effective(n)-1`, `FirstRow` uses `n-1`, `LastRow` uses\n  `n+20*bit(is_eq(n,0))-1`; all clamp to row 19. `zero_column` and `row_end`\n  are definitional proofs; the three indent laws use `line_indent_selected`.\n- `line_scan_indent`, `line_scan_min`, `line_scan_inside` mirror the word scan\n  structure with `nonblank` in place of `candidate`. `line_scan_min`'s fallback\n  branch is unreachable because any candidate is inside the field; the\n  `hlt` bound is supplied by `line_nonblank_inside`.\n- New proof-only helper names include `or_true_of_true_l`,\n  `or_true_of_true_r`, `line_nonblank_congr`, `line_nonblank_inside`,\n  `line_candidates_conflict`, `ne_of_line_candidates_conflict`, the three\n  `line_scan_*` lemmas and `line_indent_selected`. Do not redefine existing\n  helpers such as `or_true_r`, `or_not_min`, `is_eq_refl`, `zero_le`,\n  `succ_le_of_lt`, `le_pred_of_lt` or `lt_add_one_assoc`.\n- No general `row(index(r,c))`/`column(index(r,c))` lemmas were added. The find\n  unit may need them if it compares row-local indices directly.\n- `just contract` still reports 63 declarations matching the manifest;\n  `just contract-complete` still waits for the final `ALL.bend` import.\n\n## Open problems\n\nNone for this unit. Browser, keyboard parsing, default count handling and the\ng-prefix protocol remain later units; the browser is unchanged.",
+      "session_id": "ses_e86987ee7ffeUXlYKuJv8eMMcI",
+      "cost_usd": 0.047320367999999995,
+      "harness": "opencode",
+      "elapsed_s": 301,
+      "session_s": 295,
+      "verify_s": 5,
+      "test_s": 1,
+      "tokens": {
+        "input": 64832,
+        "output": 11402,
+        "reasoning": 33912,
+        "cache_read": 3469056
+      }
     }
   }
 }
