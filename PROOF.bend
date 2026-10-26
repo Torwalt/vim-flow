@@ -11,6 +11,8 @@ import ./spec/navigation/lines.bend as NavigationLines
 import ./spec/navigation/find.bend as NavigationFind
 import ./src/core/navigation_lines.bend as NavigationLinesImpl
 import ./src/core/navigation_find.bend as NavigationFindImpl
+import ./spec/navigation/input.bend as NavigationInput
+import ./src/core/navigation_input.bend as NavigationInputImpl
 
 def Laws.one_character_per_cell(value):
   match value:
@@ -2383,3 +2385,994 @@ def NavigationFind.bounded(f,p,target,right,n,ok):
       +rr = right
       find_bounded_plus(ff,pp,tt,rr,k,ok,
         Nat.is_le(1n+k, NavigationFind.total(NavigationModelImpl.norm(800n,ff),pp,tt,rr)), {==})
+
+
+
+def or_true_l(a: Bool, +b: Bool, h: {a == True{} : Bool}) ->
+  {Bool.or(a, b) == True{} : Bool}:
+  match a:
+    case True{}:
+      {==}
+    case False{}:
+      empty_elim({b == True{} : Bool}, absurd_eq(h))
+
+def normal_known_true(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, h: {flag == True{} : Bool}) ->
+  {NavigationInputImpl.normal_known(f, p, n, c, flag) ==
+    NavigationInputImpl.normal_supported(f, p, n, c) : NavigationModel.View}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      empty_elim({NavigationInputImpl.normal_known(f, p, n, c, False{}) ==
+        NavigationInputImpl.normal_supported(f, p, n, c) : NavigationModel.View},
+        absurd_eq(h))
+
+def normal_nonzero_true(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, h: {flag == True{} : Bool}) ->
+  {NavigationInputImpl.normal_nonzero_digit(f, p, n, c, flag) ==
+    NavigationModel.View{f, p,
+      NavigationModel.Normal{NavigationInput.append_count(n, NavigationInput.digit(c))}} :
+    NavigationModel.View}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      empty_elim({NavigationInputImpl.normal_nonzero_digit(f, p, n, c, False{}) ==
+        NavigationModel.View{f, p,
+          NavigationModel.Normal{NavigationInput.append_count(n, NavigationInput.digit(c))}} :
+        NavigationModel.View},
+        absurd_eq(h))
+
+# --- Navigation input implementation proofs ---
+
+def active_if_true(state: NavigationModel.State, +c: Char, flag: Bool,
+  h: {flag == True{} : Bool}) ->
+  {NavigationInputImpl.character_active_if(state, c, flag) ==
+    NavigationInputImpl.character_printable(state, c) : NavigationModel.View}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      empty_elim({NavigationInputImpl.character_active_if(state, c, False{}) ==
+        NavigationInputImpl.character_printable(state, c) : NavigationModel.View},
+        absurd_eq(h))
+
+def active_if_false(state: NavigationModel.State, +c: Char, flag: Bool,
+  h: {flag == False{} : Bool}) ->
+  {NavigationInputImpl.character_active_if(state, c, flag) ==
+    state : NavigationModel.View}:
+  match flag:
+    case False{}:
+      {==}
+    case True{}:
+      empty_elim({NavigationInputImpl.character_active_if(state, c, True{}) ==
+        state : NavigationModel.View},
+        absurd_eq(Equal.sym(Bool, True{}, False{}, h)))
+
+def step_char_true(state: NavigationModel.State, +c: Char,
+  h: {NavigationModel.printable(c) == True{} : Bool}) ->
+  {NavigationInput.step(state, NavigationModel.Character{c, False{}}) ==
+    NavigationInputImpl.character_printable(state, c) : NavigationModel.View}:
+  active_if_true(state, c, NavigationModel.printable(c), h)
+
+def normal_known_false(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, h: {flag == False{} : Bool}) ->
+  {NavigationInputImpl.normal_known(f, p, n, c, flag) ==
+    NavigationModel.View{f, p, NavigationModel.Normal{0n}} : NavigationModel.View}:
+  match flag:
+    case False{}:
+      {==}
+    case True{}:
+      empty_elim({NavigationInputImpl.normal_known(f, p, n, c, True{}) ==
+        NavigationModel.View{f, p, NavigationModel.Normal{0n}} : NavigationModel.View},
+        absurd_eq(Equal.sym(Bool, True{}, False{}, h)))
+
+def go_if_false(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, h: {flag == False{} : Bool}) ->
+  {NavigationInputImpl.go_input_if(f, p, n, c, flag) ==
+    NavigationModel.View{f, p, NavigationModel.Normal{0n}} : NavigationModel.View}:
+  match flag:
+    case False{}:
+      {==}
+    case True{}:
+      empty_elim({NavigationInputImpl.go_input_if(f, p, n, c, True{}) ==
+        NavigationModel.View{f, p, NavigationModel.Normal{0n}} : NavigationModel.View},
+        absurd_eq(Equal.sym(Bool, True{}, False{}, h)))
+
+def NavigationInput.respects_view(s, key):
+  {==}
+
+def NavigationInput.other(s):
+  {==}
+
+def NavigationInput.blocked_character(s, c):
+  {==}
+
+def NavigationInput.blocked_escape(s):
+  {==}
+
+def NavigationInput.escape(f, p, m, pos, mode):
+  {==}
+
+def NavigationInput.nonprintable(s, c, no):
+  active_if_false(s, c, NavigationModel.printable(c), no)
+
+def NavigationInput.axis(f, p, n, d, pos, count):
+  match d:
+    case NavigationAxis.Left{}:
+      {==}
+    case NavigationAxis.Down{}:
+      {==}
+    case NavigationAxis.Up{}:
+      {==}
+    case NavigationAxis.Right{}:
+      {==}
+
+def NavigationInput.words(f, p, n, m, big, pos, count):
+  match m big:
+    case NavigationWords.Forward{} False{}:
+      {==}
+    case NavigationWords.Forward{} True{}:
+      {==}
+    case NavigationWords.Backward{} False{}:
+      {==}
+    case NavigationWords.Backward{} True{}:
+      {==}
+    case NavigationWords.End{} False{}:
+      {==}
+    case NavigationWords.End{} True{}:
+      {==}
+
+def NavigationInput.zero_column(f, p, pos):
+  {==}
+
+def NavigationInput.first_nonblank(f, p, n, pos, count):
+  {==}
+
+def NavigationInput.row_end(f, p, n, pos, count):
+  {==}
+
+def NavigationInput.last_row(f, p, n, pos, count):
+  {==}
+
+def NavigationInput.find_right_prefix(f, p, n, pos, count):
+  {==}
+
+def NavigationInput.find_left_prefix(f, p, n, pos, count):
+  {==}
+
+def NavigationInput.find_target(f, p, n, right, c, pos, count, char):
+  match right:
+    case True{}:
+      step_char_true(NavigationModel.View{f, p, NavigationModel.FindRight{n}}, c, char)
+    case False{}:
+      step_char_true(NavigationModel.View{f, p, NavigationModel.FindLeft{n}}, c, char)
+
+def NavigationInput.go_prefix(f, p, n, pos, count):
+  {==}
+
+def NavigationInput.go_complete(f, p, n, pos, count):
+  {==}
+
+def NavigationInput.go_invalid(f, p, n, c, pos, count, char, not_g):
+  %Equal.sym(NavigationModel.View,
+    NavigationInput.step(NavigationModel.pack(NavigationModel.View{f, p, NavigationModel.Go{n}}),
+      NavigationModel.Character{c, False{}}),
+    NavigationInputImpl.character_printable(
+      NavigationModel.View{f, p, NavigationModel.Go{n}}, c),
+    step_char_true(NavigationModel.View{f, p, NavigationModel.Go{n}}, c, char)) :
+    {_ == NavigationModel.View{f, p, NavigationModel.Normal{0n}} : NavigationModel.View}
+  go_if_false(f, p, n, c, Char.is_eq(c, 'g'), not_g)
+
+def NavigationInput.nonzero_digit(f, p, n, c, pos, count, char):
+  +char_ok = char
+  +digit = and_left(Char.is_digit(c), Bool.not(Char.is_eq(c, '0')), char_ok)
+  not_zero = and_right(Char.is_digit(c), Bool.not(Char.is_eq(c, '0')), char_ok)
+  +printable_ok = or_true_l(Char.is_digit(c),
+    Bool.and(U32.is_ge(Char.to_u32(c), 32), U32.is_le(Char.to_u32(c), 126)),
+    digit)
+  +recognized_ok = or_true_l(Char.is_digit(c),
+    NavigationInput.contains("hjklwbeWBE^$fFgG", c), digit)
+  +nonzero_ok = and_intro(Char.is_digit(c), Bool.not(Char.is_eq(c, '0')),
+    digit, not_zero)
+  %Equal.sym(NavigationModel.View,
+    NavigationInput.step(NavigationModel.pack(
+      NavigationModel.View{f, p, NavigationModel.Normal{n}}),
+      NavigationModel.Character{c, False{}}),
+    NavigationInputImpl.character_printable(
+      NavigationModel.View{f, p, NavigationModel.Normal{n}}, c),
+    step_char_true(NavigationModel.View{f, p, NavigationModel.Normal{n}}, c,
+      printable_ok)) :
+    {_ == NavigationModel.View{f, p,
+      NavigationModel.Normal{NavigationInput.append_count(n, NavigationInput.digit(c))}} :
+      NavigationModel.View}
+  %Equal.sym(NavigationModel.View,
+    NavigationInputImpl.normal_known(f, p, n, c, NavigationInput.recognized(c)),
+    NavigationInputImpl.normal_supported(f, p, n, c),
+    normal_known_true(f, p, n, c, NavigationInput.recognized(c), recognized_ok)) :
+    {_ == NavigationModel.View{f, p,
+      NavigationModel.Normal{NavigationInput.append_count(n, NavigationInput.digit(c))}} :
+      NavigationModel.View}
+  %Equal.sym(NavigationModel.View,
+    NavigationInputImpl.normal_nonzero_digit(f, p, n, c,
+      Bool.and(Char.is_digit(c), Bool.not(Char.is_eq(c, '0')))),
+    NavigationModel.View{f, p,
+      NavigationModel.Normal{NavigationInput.append_count(n, NavigationInput.digit(c))}},
+    normal_nonzero_true(f, p, n, c,
+      Bool.and(Char.is_digit(c), Bool.not(Char.is_eq(c, '0'))), nonzero_ok)) :
+    {_ == NavigationModel.View{f, p,
+      NavigationModel.Normal{NavigationInput.append_count(n, NavigationInput.digit(c))}} :
+      NavigationModel.View}
+  {==}
+
+def NavigationInput.zero_digit(f, p, n, pos, count):
+  match n:
+    case 0n:
+      empty_elim({NavigationModel.view(NavigationInput.step(
+        NavigationModel.pack(NavigationModel.View{f, p, NavigationModel.Normal{0n}}),
+        NavigationModel.Character{'0', False{}})) ==
+        NavigationModel.View{f, p,
+          NavigationModel.Normal{NavigationInput.append_count(0n, 0n)}} : NavigationModel.View},
+        absurd_eq(count))
+    case 1n+k:
+      {==}
+
+def NavigationInput.unsupported(f, p, n, c, pos, count, char, unknown):
+  %Equal.sym(NavigationModel.View,
+    NavigationInput.step(NavigationModel.pack(
+      NavigationModel.View{f, p, NavigationModel.Normal{n}}),
+      NavigationModel.Character{c, False{}}),
+    NavigationInputImpl.character_printable(
+      NavigationModel.View{f, p, NavigationModel.Normal{n}}, c),
+    step_char_true(NavigationModel.View{f, p, NavigationModel.Normal{n}}, c, char)) :
+    {_ == NavigationModel.View{f, p, NavigationModel.Normal{0n}} : NavigationModel.View}
+  normal_known_false(f, p, n, c, NavigationInput.recognized(c), unknown)
+
+def board_normal_big_f(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_big_f(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      {==}
+
+def board_normal_f(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_f(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_big_f(f, p, n, c, Char.is_eq(c, 'F'))
+
+def board_normal_g(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_g(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_f(f, p, n, c, Char.is_eq(c, 'f'))
+
+def board_normal_big_g(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_big_g(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_g(f, p, n, c, Char.is_eq(c, 'g'))
+
+def board_normal_dollar(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_dollar(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_big_g(f, p, n, c, Char.is_eq(c, 'G'))
+
+def board_normal_caret(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_caret(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_dollar(f, p, n, c, Char.is_eq(c, '$'))
+
+def board_normal_big_e(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_big_e(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_caret(f, p, n, c, Char.is_eq(c, '^'))
+
+def board_normal_e(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_e(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_big_e(f, p, n, c, Char.is_eq(c, 'E'))
+
+def board_normal_big_b(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_big_b(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_e(f, p, n, c, Char.is_eq(c, 'e'))
+
+def board_normal_b(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_b(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_big_b(f, p, n, c, Char.is_eq(c, 'B'))
+
+def board_normal_big_w(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_big_w(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_b(f, p, n, c, Char.is_eq(c, 'b'))
+
+def board_normal_w(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_w(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_big_w(f, p, n, c, Char.is_eq(c, 'W'))
+
+def board_normal_l(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_l(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_w(f, p, n, c, Char.is_eq(c, 'w'))
+
+def board_normal_k(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_k(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_l(f, p, n, c, Char.is_eq(c, 'l'))
+
+def board_normal_j(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_j(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_k(f, p, n, c, Char.is_eq(c, 'k'))
+
+def board_normal_h(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_h(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_j(f, p, n, c, Char.is_eq(c, 'j'))
+
+def board_normal_zero(+f: NavigationModel.Field, +p: Nat, +n: Nat) ->
+  {NavigationModel.board(NavigationInputImpl.normal_zero(f, p, n)) ==
+    f : NavigationModel.Field}:
+  match n:
+    case 0n:
+      {==}
+    case 1n+k:
+      {==}
+
+def board_normal_zero_digit(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_zero_digit(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      board_normal_zero(f, p, n)
+    case False{}:
+      board_normal_h(f, p, n, c, Char.is_eq(c, 'h'))
+
+def board_normal_nonzero_digit(+f: NavigationModel.Field, +p: Nat, +n: Nat,
+  +c: Char, flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_nonzero_digit(f, p, n, c, flag)) ==
+    f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      board_normal_zero_digit(f, p, n, c, Char.is_eq(c, '0'))
+
+def board_normal_supported(+f: NavigationModel.Field, +p: Nat, +n: Nat,
+  +c: Char) -> {NavigationModel.board(
+    NavigationInputImpl.normal_supported(f, p, n, c)) == f : NavigationModel.Field}:
+  board_normal_nonzero_digit(f, p, n, c,
+    Bool.and(Char.is_digit(c), Bool.not(Char.is_eq(c, '0'))))
+
+def board_normal_known(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.normal_known(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      board_normal_supported(f, p, n, c)
+    case False{}:
+      {==}
+
+def board_normal_input(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char) ->
+  {NavigationModel.board(NavigationInputImpl.normal_input(f, p, n, c)) ==
+    f : NavigationModel.Field}:
+  board_normal_known(f, p, n, c, NavigationInput.recognized(c))
+
+def board_go_input_if(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool) -> {NavigationModel.board(
+    NavigationInputImpl.go_input_if(f, p, n, c, flag)) == f : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      {==}
+    case False{}:
+      {==}
+
+def board_go_input(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char) ->
+  {NavigationModel.board(NavigationInputImpl.go_input(f, p, n, c)) ==
+    f : NavigationModel.Field}:
+  board_go_input_if(f, p, n, c, Char.is_eq(c, 'g'))
+
+def board_character_printable(state: NavigationModel.State, +c: Char) ->
+  {NavigationModel.board(NavigationInputImpl.character_printable(state, c)) ==
+    NavigationModel.board(state) : NavigationModel.Field}:
+  match state:
+    case NavigationModel.View{f, p, m}:
+      match m:
+        case NavigationModel.Normal{n}:
+          board_normal_input(f, p, n, c)
+        case NavigationModel.FindRight{n}:
+          {==}
+        case NavigationModel.FindLeft{n}:
+          {==}
+        case NavigationModel.Go{n}:
+          board_go_input(f, p, n, c)
+
+def board_character_active_if(state: NavigationModel.State, +c: Char, flag: Bool) ->
+  {NavigationModel.board(NavigationInputImpl.character_active_if(state, c, flag)) ==
+    NavigationModel.board(state) : NavigationModel.Field}:
+  match flag:
+    case True{}:
+      board_character_printable(state, c)
+    case False{}:
+      {==}
+
+def board_character_active(state: NavigationModel.State, +c: Char) ->
+  {NavigationModel.board(NavigationInputImpl.character_active(state, c)) ==
+    NavigationModel.board(state) : NavigationModel.Field}:
+  board_character_active_if(state, c, NavigationModel.printable(c))
+
+def board_character_input(state: NavigationModel.State, +c: Char, blocked: Bool) ->
+  {NavigationModel.board(NavigationInputImpl.character_input(state, c, blocked)) ==
+    NavigationModel.board(state) : NavigationModel.Field}:
+  match blocked:
+    case True{}:
+      {==}
+    case False{}:
+      board_character_active(state, c)
+
+def board_clear_state(state: NavigationModel.State) ->
+  {NavigationModel.board(NavigationInputImpl.clear_state(state)) ==
+    NavigationModel.board(state) : NavigationModel.Field}:
+  match state:
+    case NavigationModel.View{f, p, m}:
+      {==}
+
+def board_escape_input(state: NavigationModel.State, blocked: Bool) ->
+  {NavigationModel.board(NavigationInputImpl.escape_input(state, blocked)) ==
+    NavigationModel.board(state) : NavigationModel.Field}:
+  match blocked:
+    case True{}:
+      {==}
+    case False{}:
+      board_clear_state(state)
+
+def step_board(state: NavigationModel.State, input: NavigationModel.Input) ->
+  {NavigationModel.board(NavigationInput.step(state, input)) ==
+    NavigationModel.board(state) : NavigationModel.Field}:
+  match input:
+    case NavigationModel.Other{}:
+      {==}
+    case NavigationModel.Escape{blocked}:
+      board_escape_input(state, blocked)
+    case NavigationModel.Character{value, blocked}:
+      board_character_input(state, value, blocked)
+
+def NavigationInput.preserves_field(s, key, ok):
+  step_board(s, key)
+
+law min_le_left_nat:
+  for +a: Nat
+  for +b: Nat
+  {Nat.is_le(Nat.min(a, b), a) == True{} : Bool}
+
+def min_le_left_nat(a, b):
+  match a b:
+    case 0n _:
+      {==}
+    case 1n+p 0n:
+      {==}
+    case 1n+p 1n+q:
+      min_le_left_nat(p, q)
+
+law effective_positive:
+  for +n: Nat
+  {Nat.is_gt(Nat.max(1n, n), 0n) == True{} : Bool}
+
+def effective_positive(n):
+  match n:
+    case 0n:
+      {==}
+    case 1n+k:
+      {==}
+
+law effective_le_9999:
+  for +n: Nat
+  for h: {Nat.is_le(n, 9999n) == True{} : Bool}
+  {Nat.is_le(Nat.max(1n, n), 9999n) == True{} : Bool}
+
+def effective_le_9999(n, h):
+  match n:
+    case 0n:
+      {==}
+    case 1n+k:
+      h
+
+def valid_normal_zero_at(+f: NavigationModel.Field, +out: Nat,
+  hin: {NavigationModel.inside(out) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationModel.View{f, out, NavigationModel.Normal{0n}}) ==
+    True{} : Bool}:
+  and_intro(NavigationModel.inside(out), Nat.is_le(0n, 9999n), hin, {==})
+
+def valid_normal_append_at(+f: NavigationModel.Field, +p: Nat, +n: Nat, +d: Nat,
+  hin: {NavigationModel.inside(p) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationModel.View{f, p,
+    NavigationModel.Normal{NavigationInput.append_count(n, d)}}) == True{} : Bool}:
+  and_intro(NavigationModel.inside(p),
+    Nat.is_le(Nat.min(9999n, Nat.add(Nat.mul(n, 10n), d)), 9999n),
+    hin, min_le_left_nat(9999n, Nat.add(Nat.mul(n, 10n), d)))
+
+def valid_find_prefix_at(+f: NavigationModel.Field, +p: Nat, +n: Nat, right: Bool,
+  hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationModel.View{f, p,
+    NavigationInput.find_mode(right, NavigationModel.effective(n))}) ==
+    True{} : Bool}:
+  match right:
+    case True{}:
+      and_intro(NavigationModel.inside(p),
+        Bool.and(Nat.is_gt(NavigationModel.effective(n), 0n),
+          Nat.is_le(NavigationModel.effective(n), 9999n)),
+        hin,
+        and_intro(Nat.is_gt(NavigationModel.effective(n), 0n),
+          Nat.is_le(NavigationModel.effective(n), 9999n),
+          effective_positive(n), effective_le_9999(n, hcount)))
+    case False{}:
+      and_intro(NavigationModel.inside(p),
+        Bool.and(Nat.is_gt(NavigationModel.effective(n), 0n),
+          Nat.is_le(NavigationModel.effective(n), 9999n)),
+        hin,
+        and_intro(Nat.is_gt(NavigationModel.effective(n), 0n),
+          Nat.is_le(NavigationModel.effective(n), 9999n),
+          effective_positive(n), effective_le_9999(n, hcount)))
+
+def valid_go_prefix_at(+f: NavigationModel.Field, +p: Nat, +n: Nat,
+  hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationModel.View{f, p, NavigationModel.Go{n}}) ==
+    True{} : Bool}:
+  and_intro(NavigationModel.inside(p), Nat.is_le(n, 9999n), hin, hcount)
+
+def normal_big_f_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(
+    NavigationInputImpl.normal_big_f(f, p, n, c, flag)) == True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_find_prefix_at(f, p, n, False{}, hin, hcount)
+    case False{}:
+      valid_normal_zero_at(f, p, hin)
+
+def normal_f_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_f(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_find_prefix_at(f, p, n, True{}, hin, hcount)
+    case False{}:
+      normal_big_f_valid(f, p, n, c, Char.is_eq(c, 'F'), hin, hcount)
+
+def normal_g_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_g(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      and_intro(NavigationModel.inside(p), Nat.is_le(n, 9999n), hin, hcount)
+    case False{}:
+      normal_f_valid(f, p, n, c, Char.is_eq(c, 'f'), hin, hcount)
+
+def normal_big_g_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_big_g(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationLines.move(f, p, NavigationLines.LastRow{}, n),
+        NavigationLines.bounded(f, p, NavigationLines.LastRow{}, n, hin))
+    case False{}:
+      normal_g_valid(f, p, n, c, Char.is_eq(c, 'g'), hin, hcount)
+
+def normal_dollar_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_dollar(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationLines.move(f, p, NavigationLines.RowEnd{}, n),
+        NavigationLines.bounded(f, p, NavigationLines.RowEnd{}, n, hin))
+    case False{}:
+      normal_big_g_valid(f, p, n, c, Char.is_eq(c, 'G'), hin, hcount)
+
+def normal_caret_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_caret(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationLines.move(f, p, NavigationLines.FirstNonblank{}, n),
+        NavigationLines.bounded(f, p, NavigationLines.FirstNonblank{}, n, hin))
+    case False{}:
+      normal_dollar_valid(f, p, n, c, Char.is_eq(c, '$'), hin, hcount)
+
+def normal_big_e_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_big_e(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationWordsImpl.move_impl(NavigationModel.effective(n), f, p,
+          NavigationWords.End{}, True{}),
+        NavigationWords.bounded(f, p, NavigationWords.End{}, True{},
+          NavigationModel.effective(n), hin))
+    case False{}:
+      normal_caret_valid(f, p, n, c, Char.is_eq(c, '^'), hin, hcount)
+
+def normal_e_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_e(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationWordsImpl.move_impl(NavigationModel.effective(n), f, p,
+          NavigationWords.End{}, False{}),
+        NavigationWords.bounded(f, p, NavigationWords.End{}, False{},
+          NavigationModel.effective(n), hin))
+    case False{}:
+      normal_big_e_valid(f, p, n, c, Char.is_eq(c, 'E'), hin, hcount)
+
+def normal_big_b_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_big_b(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationWordsImpl.move_impl(NavigationModel.effective(n), f, p,
+          NavigationWords.Backward{}, True{}),
+        NavigationWords.bounded(f, p, NavigationWords.Backward{}, True{},
+          NavigationModel.effective(n), hin))
+    case False{}:
+      normal_e_valid(f, p, n, c, Char.is_eq(c, 'e'), hin, hcount)
+
+def normal_b_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_b(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationWordsImpl.move_impl(NavigationModel.effective(n), f, p,
+          NavigationWords.Backward{}, False{}),
+        NavigationWords.bounded(f, p, NavigationWords.Backward{}, False{},
+          NavigationModel.effective(n), hin))
+    case False{}:
+      normal_big_b_valid(f, p, n, c, Char.is_eq(c, 'B'), hin, hcount)
+
+def normal_big_w_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_big_w(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationWordsImpl.move_impl(NavigationModel.effective(n), f, p,
+          NavigationWords.Forward{}, True{}),
+        NavigationWords.bounded(f, p, NavigationWords.Forward{}, True{},
+          NavigationModel.effective(n), hin))
+    case False{}:
+      normal_b_valid(f, p, n, c, Char.is_eq(c, 'b'), hin, hcount)
+
+def normal_w_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_w(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationWordsImpl.move_impl(NavigationModel.effective(n), f, p,
+          NavigationWords.Forward{}, False{}),
+        NavigationWords.bounded(f, p, NavigationWords.Forward{}, False{},
+          NavigationModel.effective(n), hin))
+    case False{}:
+      normal_big_w_valid(f, p, n, c, Char.is_eq(c, 'W'), hin, hcount)
+
+def normal_l_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_l(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationAxis.move(p, NavigationAxis.Right{}, NavigationModel.effective(n)),
+        NavigationAxis.bounded(p, NavigationAxis.Right{},
+          NavigationModel.effective(n), hin))
+    case False{}:
+      normal_w_valid(f, p, n, c, Char.is_eq(c, 'w'), hin, hcount)
+
+def normal_k_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_k(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationAxis.move(p, NavigationAxis.Up{}, NavigationModel.effective(n)),
+        NavigationAxis.bounded(p, NavigationAxis.Up{},
+          NavigationModel.effective(n), hin))
+    case False{}:
+      normal_l_valid(f, p, n, c, Char.is_eq(c, 'l'), hin, hcount)
+
+def normal_j_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_j(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationAxis.move(p, NavigationAxis.Down{}, NavigationModel.effective(n)),
+        NavigationAxis.bounded(p, NavigationAxis.Down{},
+          NavigationModel.effective(n), hin))
+    case False{}:
+      normal_k_valid(f, p, n, c, Char.is_eq(c, 'k'), hin, hcount)
+
+def normal_h_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_h(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationAxis.move(p, NavigationAxis.Left{}, NavigationModel.effective(n)),
+        NavigationAxis.bounded(p, NavigationAxis.Left{},
+          NavigationModel.effective(n), hin))
+    case False{}:
+      normal_j_valid(f, p, n, c, Char.is_eq(c, 'j'), hin, hcount)
+
+def normal_zero_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat,
+  hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_zero(f, p, n)) ==
+    True{} : Bool}:
+  match n:
+    case 0n:
+      valid_normal_zero_at(f,
+        NavigationLines.move(f, p, NavigationLines.ColumnZero{}, 0n),
+        NavigationLines.bounded(f, p, NavigationLines.ColumnZero{}, 0n, hin))
+    case 1n+k:
+      valid_normal_append_at(f, p, 1n+k, 0n, hin)
+
+def normal_zero_digit_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat,
+  +c: Char, flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(
+    NavigationInputImpl.normal_zero_digit(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      normal_zero_valid(f, p, n, hin, hcount)
+    case False{}:
+      normal_h_valid(f, p, n, c, Char.is_eq(c, 'h'), hin, hcount)
+
+def normal_nonzero_digit_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat,
+  +c: Char, flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(
+    NavigationInputImpl.normal_nonzero_digit(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_append_at(f, p, n, NavigationInput.digit(c), hin)
+    case False{}:
+      normal_zero_digit_valid(f, p, n, c, Char.is_eq(c, '0'), hin, hcount)
+
+def normal_supported_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_supported(f, p, n, c)) ==
+    True{} : Bool}:
+  normal_nonzero_digit_valid(f, p, n, c,
+    Bool.and(Char.is_digit(c), Bool.not(Char.is_eq(c, '0'))), hin, hcount)
+
+def normal_known_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool},
+  hcount: {Nat.is_le(n, 9999n) == True{} : Bool}) ->
+  {NavigationModel.valid(
+    NavigationInputImpl.normal_known(f, p, n, c, flag)) == True{} : Bool}:
+  match flag:
+    case True{}:
+      normal_supported_valid(f, p, n, c, hin, hcount)
+    case False{}:
+      valid_normal_zero_at(f, p, hin)
+
+def normal_input_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  ok: {NavigationModel.valid(
+    NavigationModel.View{f, p, NavigationModel.Normal{n}}) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.normal_input(f, p, n, c)) ==
+    True{} : Bool}:
+  +ok0 = ok
+  +hin = and_left(NavigationModel.inside(p),
+    NavigationModel.mode_valid(NavigationModel.Normal{n}), ok0)
+  +hcount = and_right(NavigationModel.inside(p),
+    NavigationModel.mode_valid(NavigationModel.Normal{n}), ok0)
+  normal_known_valid(f, p, n, c, NavigationInput.recognized(c), hin, hcount)
+
+def go_input_if_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  flag: Bool, hin: {NavigationModel.inside(p) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.go_input_if(f, p, n, c, flag)) ==
+    True{} : Bool}:
+  match flag:
+    case True{}:
+      valid_normal_zero_at(f,
+        NavigationLines.move(f, p, NavigationLines.FirstRow{}, n),
+        NavigationLines.bounded(f, p, NavigationLines.FirstRow{}, n, hin))
+    case False{}:
+      valid_normal_zero_at(f, p, hin)
+
+def go_input_valid(+f: NavigationModel.Field, +p: Nat, +n: Nat, +c: Char,
+  hin: {NavigationModel.inside(p) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.go_input(f, p, n, c)) ==
+    True{} : Bool}:
+  go_input_if_valid(f, p, n, c, Char.is_eq(c, 'g'), hin)
+
+def character_printable_valid(+state: NavigationModel.State, +c: Char,
+  +ok: {NavigationModel.valid(NavigationModel.view(state)) == True{} : Bool}) ->
+  {NavigationModel.valid(
+    NavigationInputImpl.character_printable(state, c)) == True{} : Bool}:
+  match state:
+    case NavigationModel.View{+f, +p, m}:
+      match m:
+        case NavigationModel.Normal{n}:
+          normal_input_valid(f, p, n, c, ok)
+        case NavigationModel.FindRight{n}:
+          +ok0 = ok
+          +hin = and_left(NavigationModel.inside(p),
+            NavigationModel.mode_valid(NavigationModel.FindRight{n}), ok0)
+          valid_normal_zero_at(f,
+            NavigationFind.move(f, p, c, True{}, n),
+            NavigationFind.bounded(f, p, c, True{}, n, hin))
+        case NavigationModel.FindLeft{n}:
+          +ok0 = ok
+          +hin = and_left(NavigationModel.inside(p),
+            NavigationModel.mode_valid(NavigationModel.FindLeft{n}), ok0)
+          valid_normal_zero_at(f,
+            NavigationFind.move(f, p, c, False{}, n),
+            NavigationFind.bounded(f, p, c, False{}, n, hin))
+        case NavigationModel.Go{n}:
+          +ok0 = ok
+          +hin = and_left(NavigationModel.inside(p),
+            NavigationModel.mode_valid(NavigationModel.Go{n}), ok0)
+          go_input_valid(f, p, n, c, hin)
+
+def character_active_if_valid(+state: NavigationModel.State, +c: Char, flag: Bool,
+  +ok: {NavigationModel.valid(NavigationModel.view(state)) == True{} : Bool}) ->
+  {NavigationModel.valid(
+    NavigationInputImpl.character_active_if(state, c, flag)) == True{} : Bool}:
+  match flag:
+    case True{}:
+      character_printable_valid(state, c, ok)
+    case False{}:
+      ok
+
+def character_active_valid(+state: NavigationModel.State, +c: Char,
+  +ok: {NavigationModel.valid(NavigationModel.view(state)) == True{} : Bool}) ->
+  {NavigationModel.valid(
+    NavigationInputImpl.character_active(state, c)) == True{} : Bool}:
+  character_active_if_valid(state, c, NavigationModel.printable(c), ok)
+
+def character_input_valid(+state: NavigationModel.State, +c: Char, blocked: Bool,
+  +ok: {NavigationModel.valid(NavigationModel.view(state)) == True{} : Bool}) ->
+  {NavigationModel.valid(
+    NavigationInputImpl.character_input(state, c, blocked)) == True{} : Bool}:
+  match blocked:
+    case True{}:
+      ok
+    case False{}:
+      character_active_valid(state, c, ok)
+
+def clear_valid(state: NavigationModel.State,
+  +ok: {NavigationModel.valid(NavigationModel.view(state)) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.clear_state(state)) == True{} : Bool}:
+  match state:
+    case NavigationModel.View{+f, +p, m}:
+      +ok0 = ok
+      +hin = and_left(NavigationModel.inside(p), NavigationModel.mode_valid(m), ok0)
+      valid_normal_zero_at(f, p, hin)
+
+def escape_input_valid(+state: NavigationModel.State, blocked: Bool,
+  +ok: {NavigationModel.valid(NavigationModel.view(state)) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInputImpl.escape_input(state, blocked)) ==
+    True{} : Bool}:
+  match blocked:
+    case True{}:
+      ok
+    case False{}:
+      clear_valid(state, ok)
+
+def step_valid(+state: NavigationModel.State, input: NavigationModel.Input,
+  +ok: {NavigationModel.valid(NavigationModel.view(state)) == True{} : Bool}) ->
+  {NavigationModel.valid(NavigationInput.step(state, input)) == True{} : Bool}:
+  match input:
+    case NavigationModel.Other{}:
+      ok
+    case NavigationModel.Escape{blocked}:
+      escape_input_valid(state, blocked, ok)
+    case NavigationModel.Character{value, blocked}:
+      character_input_valid(state, value, blocked, ok)
+
+def NavigationInput.preserves_validity(s, key, ok):
+  step_valid(s, key, ok)

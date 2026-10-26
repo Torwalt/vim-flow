@@ -8,7 +8,7 @@
     "preview": "bun tools/preview.ts",
     "build": "bend index.html -o dist",
     "typecheck": "tsc --noEmit",
-    "test": "bun test tests/bridge.test.ts",
+    "test": "bun test tests/bridge.test.ts tests/navigation.test.ts",
     "test:browser": "playwright test",
     "proof": "bend PROOF.bend --verdict"
   },

@@ -54,7 +54,8 @@ def bit(value: Bool) -> Nat:
       1n
 
 def printable(+c: Char) -> Bool:
-  Bool.and(U32.is_ge(Char.to_u32(c), 32), U32.is_le(Char.to_u32(c), 126))
+  Bool.or(Char.is_digit(c),
+    Bool.and(U32.is_ge(Char.to_u32(c), 32), U32.is_le(Char.to_u32(c), 126)))
 
 def sanitize(c: Char, ok: Bool) -> Char:
   match ok:

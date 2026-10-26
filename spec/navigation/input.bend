@@ -50,8 +50,8 @@ def contains(text: String, +c: Char) -> Bool:
     case SCon{h, rest}:
       Bool.or(Char.is_eq(h, c), contains(rest, c))
 
-def recognized(c: Char) -> Bool:
-  contains("hjklwbeWBE0^$fFgG123456789", c)
+def recognized(+c: Char) -> Bool:
+  Bool.or(Char.is_digit(c), contains("hjklwbeWBE^$fFgG", c))
 
 def digit(c: Char) -> Nat:
   Nat.sub(U32.to_nat(Char.to_u32(c)), 48n)

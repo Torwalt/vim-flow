@@ -4,9 +4,9 @@
     "spec/navigation/ALL.bend": "114935f828775ab67b011401b0b87427e5a22c600befc6bda4e663434af49273",
     "spec/navigation/axis.bend": "bba1cab8c266eb3e4a2f3bb924c2cebbaab2666baa6956aa7dc84ec0f4702518",
     "spec/navigation/find.bend": "d4b43e8cf350b3db12b78ce1b2c5519273f86e8bac0cd4c08d4bb3936d5d2a72",
-    "spec/navigation/input.bend": "b1d718ad904b4648349310c9db1b8cfc803f3dbcfa9624ca5e158418758b7d15",
+    "spec/navigation/input.bend": "7ffd5feb6ceb18fcae0e51e7a5cc2a5b80ebf7d27862df2a4421df5089f557e2",
     "spec/navigation/lines.bend": "f5242059bd19556f1a8da3393d8124192faeee53337fafe61b7db06018a4f060",
-    "spec/navigation/model.bend": "dd10d1d810b77fea9147ddee69485013b03ab3ddb8fc1e89c1737694fa464915",
+    "spec/navigation/model.bend": "e618c8db09cec02a9bc15474168b6de81a42acde5ca22fa7fa16b8d79e09f706",
     "spec/navigation/words.bend": "680531d4bb271342be6b42194349a779838e45dd743e92ab9440959b68413ab0"
   }
 }
